@@ -48,6 +48,7 @@ import { noop } from '../../empty';
 import findClosestDraggableIdFromEvent from './find-closest-draggable-id-from-event';
 import findDraggable from '../get-elements/find-draggable';
 import bindEvents from '../event-bindings/bind-events';
+import type { DragDropEnvironment } from '../environment';
 
 function preventDefault(event: Event) {
   event.preventDefault();
@@ -149,8 +150,7 @@ type TryStartArgs = {|
   draggableId: DraggableId,
   forceSensorStop: ?() => void,
   sourceEvent: ?Event,
-  //TODO any type
-  dndContext: any,
+  environment: DragDropEnvironment,
 |};
 
 function tryStart({
@@ -161,7 +161,7 @@ function tryStart({
   draggableId,
   forceSensorStop,
   sourceEvent,
-  dndContext
+  environment,
 }: TryStartArgs): ?PreDragActions {
   const shouldStart: boolean = canStart({
     lockAPI,
@@ -175,7 +175,11 @@ function tryStart({
   }
 
   const entry: DraggableEntry = registry.draggable.getById(draggableId);
-  const el: ?HTMLElement = findDraggable(contextId, entry.descriptor.id, dndContext);
+  const el: ?HTMLElement = findDraggable(
+    contextId,
+    entry.descriptor.id,
+    environment.root,
+  );
 
   if (!el) {
     warning(`Unable to find draggable element with id: ${draggableId}`);
@@ -242,7 +246,7 @@ function tryStart({
 
       // block next click if requested
       if (options.shouldBlockNextClick) {
-        const unbind = bindEvents(dndContext || window, [
+        const unbind = bindEvents(environment.window, [
           {
             eventName: 'click',
             fn: preventDefault,
@@ -358,8 +362,7 @@ type SensorMarshalArgs = {|
   store: Store,
   customSensors: ?(Sensor[]),
   enableDefaultSensors: boolean,
-  //TODO any type
-  dndContext: any,
+  environment: DragDropEnvironment,
 |};
 
 // default sensors are now exported to library consumers
@@ -375,7 +378,7 @@ export default function useSensorMarshal({
   registry,
   customSensors,
   enableDefaultSensors,
-  dndContext
+  environment,
 }: SensorMarshalArgs) {
   const useSensors: Sensor[] = [
     ...(enableDefaultSensors ? defaultSensors : []),
@@ -440,9 +443,9 @@ export default function useSensorMarshal({
         forceSensorStop: forceStop,
         sourceEvent:
           options && options.sourceEvent ? options.sourceEvent : null,
-        dndContext: api.dndContext
+        environment,
       }),
-    [contextId, lockAPI, registry, store],
+    [contextId, environment, lockAPI, registry, store],
   );
 
   const findClosestDraggableId = useCallback(
@@ -483,7 +486,7 @@ export default function useSensorMarshal({
       findOptionsForDraggable,
       tryReleaseLock,
       isLockClaimed,
-      dndContext,
+      environment,
     }),
     [
       canGetLock,
@@ -492,6 +495,7 @@ export default function useSensorMarshal({
       findOptionsForDraggable,
       tryReleaseLock,
       isLockClaimed,
+      environment,
     ],
   );
 

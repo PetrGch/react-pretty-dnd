@@ -1,6 +1,6 @@
 // @flow
 import React from 'react';
-import { render } from '@testing-library/react';
+import { render, act } from '@testing-library/react';
 import AnimateInOut, {
   type AnimateProvided,
 } from '../../../../src/view/animate-in-out/animate-in-out';
@@ -168,7 +168,9 @@ it('should animate closed if required', () => {
   const provided: AnimateProvided = child.mock.calls[0][0];
   child.mockClear();
   // this will trigger a setState that will stop rendering the child
-  provided.onClose();
+  act(() => {
+    provided.onClose();
+  });
 
   expect(container.innerHTML).toEqual('');
   expect(child).not.toHaveBeenCalled();

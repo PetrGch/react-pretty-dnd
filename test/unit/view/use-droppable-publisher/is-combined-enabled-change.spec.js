@@ -1,5 +1,4 @@
 // @flow
-import { mount } from 'enzyme';
 import React from 'react';
 import type { DimensionMarshal } from '../../../../src/state/dimension-marshal/dimension-marshal-types';
 import { getMarshalStub } from '../../../util/dimension-marshal';
@@ -11,6 +10,7 @@ import {
   WithAppContext,
 } from './util/shared';
 import forceUpdate from '../../../util/force-update';
+import mount from '../../../util/rtl-mount';
 import PassThroughProps from '../../../util/pass-through-props';
 import type {
   Registry,

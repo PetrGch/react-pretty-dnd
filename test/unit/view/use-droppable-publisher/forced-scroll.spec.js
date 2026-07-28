@@ -1,10 +1,10 @@
 // @flow
-import { mount } from 'enzyme';
 import React from 'react';
 import { invariant } from '../../../../src/invariant';
 import type { DimensionMarshal } from '../../../../src/state/dimension-marshal/dimension-marshal-types';
 import { getMarshalStub } from '../../../util/dimension-marshal';
 import { setViewport } from '../../../util/viewport';
+import mount from '../../../util/rtl-mount';
 import {
   App,
   immediate,
@@ -38,9 +38,10 @@ it('should throw if the droppable has no closest scrollable', () => {
       <App parentIsScrollable={false} droppableIsScrollable={false} />,
     </WithAppContext>,
   );
-  const droppable: ?HTMLElement = wrapper.find('.droppable').getDOMNode();
+  const droppable: ?HTMLElement = wrapper.container.querySelector('.droppable');
   invariant(droppable);
-  const parent: ?HTMLElement = wrapper.find('.scroll-parent').getDOMNode();
+  const parent: ?HTMLElement =
+    wrapper.container.querySelector('.scroll-parent');
   invariant(parent);
   jest
     .spyOn(droppable, 'getBoundingClientRect')
@@ -79,9 +80,9 @@ describe('there is a closest scrollable', () => {
         <ScrollableItem />
       </WithAppContext>,
     );
-    const container: ?HTMLElement = wrapper
-      .find('.scroll-container')
-      .getDOMNode();
+    const container: ?HTMLElement = wrapper.container.querySelector(
+      '.scroll-container',
+    );
     invariant(container);
 
     expect(container.scrollTop).toBe(0);
@@ -109,9 +110,9 @@ describe('there is a closest scrollable', () => {
       </WithAppContext>,
     );
 
-    const container: ?HTMLElement = wrapper
-      .find('.scroll-container')
-      .getDOMNode();
+    const container: ?HTMLElement = wrapper.container.querySelector(
+      '.scroll-container',
+    );
     invariant(container);
     expect(container.scrollTop).toBe(0);
     expect(container.scrollLeft).toBe(0);

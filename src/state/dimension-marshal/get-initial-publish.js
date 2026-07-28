@@ -18,21 +18,24 @@ import type {
   Viewport,
 } from '../../types';
 import getViewport from '../../view/window/get-viewport';
+import type { DragDropEnvironment } from '../../view/environment';
 
 type Args = {|
   critical: Critical,
   scrollOptions: ScrollOptions,
   registry: Registry,
+  environment?: ?DragDropEnvironment,
 |};
 
 export default ({
   critical,
   scrollOptions,
   registry,
+  environment,
 }: Args): StartPublishingResult => {
   const timingKey: string = 'Initial collection from DOM';
   timings.start(timingKey);
-  const viewport: Viewport = getViewport();
+  const viewport: Viewport = getViewport(environment);
   const windowScroll: Position = viewport.scroll.current;
 
   const home: DroppableDescriptor = critical.droppable;

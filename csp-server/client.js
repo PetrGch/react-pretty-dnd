@@ -2,7 +2,7 @@
 /* eslint-env browser */
 
 import React from 'react';
-import { hydrate } from 'react-dom';
+import { hydrateRoot } from 'react-dom/client';
 import Sample from './app';
 
 const root: Element | null = document.getElementById('root');
@@ -15,5 +15,5 @@ if (cspEl) {
 }
 
 if (root) {
-  hydrate(<Sample nonce={nonce} />, root);
+  hydrateRoot(root, <Sample nonce={nonce} />);
 }

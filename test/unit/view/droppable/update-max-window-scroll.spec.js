@@ -1,26 +1,36 @@
 // @flow
-import type { ReactWrapper } from 'enzyme';
-import mount from './util/mount';
+import { invariant } from '../../../../src/invariant';
+import mount, { type DroppableWrapper } from './util/mount';
 import { homeOwnProps, isOverHome, isNotOverHome } from './util/get-props';
 import type { DispatchProps } from '../../../../src/view/droppable/droppable-types';
 import getMaxWindowScroll from '../../../../src/view/window/get-max-window-scroll';
-import Placeholder from '../../../../src/view/placeholder';
+import { createEnvironment } from '../../../../src/view/environment';
+import * as attributes from '../../../../src/view/data-attributes';
+import fireTransitionEnd from '../../../util/fire-transition-end';
+
+const getPlaceholder = (wrapper: DroppableWrapper): HTMLElement => {
+  const el: ?HTMLElement = wrapper.container.querySelector(
+    `[${attributes.placeholder.contextId}]`,
+  );
+  invariant(el);
+  return el;
+};
 
 it('should update when a placeholder animation finishes', () => {
   const dispatchProps: DispatchProps = {
     updateViewportMaxScroll: jest.fn(),
   };
-  const wrapper: ReactWrapper<*> = mount({
+  const wrapper: DroppableWrapper = mount({
     ownProps: homeOwnProps,
     mapProps: isOverHome,
     dispatchProps,
     isMovementAllowed: () => true,
   });
 
-  wrapper.find(Placeholder).props().onTransitionEnd();
+  fireTransitionEnd(getPlaceholder(wrapper), 'height');
 
   expect(dispatchProps.updateViewportMaxScroll).toHaveBeenCalledWith({
-    maxScroll: getMaxWindowScroll(),
+    maxScroll: getMaxWindowScroll(createEnvironment()),
   });
 });
 
@@ -28,17 +38,17 @@ it('should update when a placeholder finishes and the list is not dragged over',
   const dispatchProps: DispatchProps = {
     updateViewportMaxScroll: jest.fn(),
   };
-  const wrapper: ReactWrapper<*> = mount({
+  const wrapper: DroppableWrapper = mount({
     ownProps: homeOwnProps,
     mapProps: isNotOverHome,
     dispatchProps,
     isMovementAllowed: () => true,
   });
 
-  wrapper.find(Placeholder).props().onTransitionEnd();
+  fireTransitionEnd(getPlaceholder(wrapper), 'height');
 
   expect(dispatchProps.updateViewportMaxScroll).toHaveBeenCalledWith({
-    maxScroll: getMaxWindowScroll(),
+    maxScroll: getMaxWindowScroll(createEnvironment()),
   });
 });
 
@@ -46,7 +56,7 @@ it('should not update when dropping', () => {
   const dispatchProps: DispatchProps = {
     updateViewportMaxScroll: jest.fn(),
   };
-  const wrapper: ReactWrapper<*> = mount({
+  const wrapper: DroppableWrapper = mount({
     ownProps: homeOwnProps,
     mapProps: isNotOverHome,
     dispatchProps,
@@ -54,7 +64,7 @@ it('should not update when dropping', () => {
     isMovementAllowed: () => false,
   });
 
-  wrapper.find(Placeholder).props().onTransitionEnd();
+  fireTransitionEnd(getPlaceholder(wrapper), 'height');
 
   expect(dispatchProps.updateViewportMaxScroll).not.toHaveBeenCalled();
 });

@@ -1,11 +1,12 @@
 // @flow
 import React from 'react';
-import { mount, type ReactWrapper } from 'enzyme';
-import { act } from 'react-dom/test-utils';
+import { act } from '@testing-library/react';
 import Placeholder from './util/placeholder-with-class';
 import { expectIsFull } from './util/expect';
 import getPlaceholderStyle from './util/get-placeholder-style';
 import { placeholder } from './util/data';
+import mount, { type Wrapper } from '../../../util/rtl-mount';
+import fireTransitionEnd from '../../../util/fire-transition-end';
 
 jest.useFakeTimers();
 
@@ -13,7 +14,7 @@ it('should only fire a single transitionend event a single time when transitioni
   const onTransitionEnd = jest.fn();
   const onClose = jest.fn();
 
-  const wrapper: ReactWrapper<*> = mount(
+  const wrapper: Wrapper = mount(
     <Placeholder
       animate="open"
       placeholder={placeholder}
@@ -26,36 +27,22 @@ it('should only fire a single transitionend event a single time when transitioni
   act(() => {
     jest.runOnlyPendingTimers();
   });
-  // let enzyme know that the react tree has changed due to the set state
-  wrapper.update();
-  expectIsFull(getPlaceholderStyle(wrapper));
+  expectIsFull(getPlaceholderStyle(wrapper.container));
+
+  const el: HTMLElement = wrapper.getDOMNode();
 
   // first event: a 'height' event will trigger the handler
-
-  // $ExpectError - not a complete event
-  const height: TransitionEvent = {
-    propertyName: 'height',
-  };
-  wrapper.simulate('transitionend', height);
+  fireTransitionEnd(el, 'height');
   expect(onTransitionEnd).toHaveBeenCalledTimes(1);
   onTransitionEnd.mockClear();
 
   // subsequent transition events will not trigger
-
-  // $ExpectError - not a complete event
-  const margin: TransitionEvent = {
-    propertyName: 'margin',
-  };
-  // $ExpectError - not a complete event
-  const width: TransitionEvent = {
-    propertyName: 'width',
-  };
-  wrapper.simulate('transitionend', margin);
-  wrapper.simulate('transitionend', width);
+  fireTransitionEnd(el, 'margin');
+  fireTransitionEnd(el, 'width');
   expect(onTransitionEnd).not.toHaveBeenCalled();
 
   // another transition event of height would trigger the handler
-  wrapper.simulate('transitionend', height);
+  fireTransitionEnd(el, 'height');
   expect(onTransitionEnd).toHaveBeenCalledTimes(1);
 
   // validate: this should not have triggered any close events

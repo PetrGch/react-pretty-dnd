@@ -28,6 +28,13 @@ type Props = {|
   // Used for custom sensors
   sensors?: Sensor[],
   enableDefaultSensors?: ?boolean,
+  // Preferred: host window + optional ShadowRoot / query root
+  environment?: {|
+    window: typeof window,
+    root?: Document | ShadowRoot | Element,
+  |},
+  // Legacy: Window OR query root. Prefer "environment".
+  dndContext?: any,
 |};
 ```
 
@@ -35,6 +42,30 @@ type Props = {|
 - `nonce`: Used for strict content security policy setups. See our [content security policy guide](/docs/guides/content-security-policy.md)
 - `sensors`: Used to pass in your own `sensor`s for a `<DragDropContext />`. See our [sensor api documentation](/docs/sensors/sensor-api.md)
 - `enableDefaultSensors`: Whether or not the default sensors ([mouse](/docs/sensors/mouse.md), [keyboard](/docs/sensors/keyboard.md), and [touch](/docs/sensors/touch.md)) are enabled. You can also import them separately as `useMouseSensor`, `useKeyboardSensor`, or `useTouchSensor` and reuse just some of them via `sensors` prop. See our [sensor api documentation](/docs/sensors/sensor-api.md)
+- `environment`: Use when drag-and-drop lives inside a Shadow DOM tree or an encapsulated / proxy `window`. Pass `{ window, root }` where `window` is used for scroll, event bindings, and `getComputedStyle`, and `root` (typically a `ShadowRoot`) is used for `querySelectorAll` element discovery. Defaults to the global `window` / `document`.
+- `dndContext`: **Deprecated.** Legacy overloaded prop that accepted either a Window-like object or a query root. Prefer `environment`.
+
+### Shadow DOM example
+
+```js
+import { DragDropContext } from 'react-pretty-dnd';
+
+const host = document.querySelector('#host');
+const shadowRoot = host.attachShadow({ mode: 'open' });
+
+// render your React tree into shadowRoot, then:
+<DragDropContext
+  environment={{
+    window, // or a framework-provided proxy window
+    root: shadowRoot,
+  }}
+  onDragEnd={onDragEnd}
+>
+  {/* Droppable / Draggable tree mounted inside the shadow root */}
+</DragDropContext>
+```
+
+> Closed shadow roots cannot be queried from outside — pass the `ShadowRoot` reference you already hold as `environment.root`.
 
 > See our [type guide](/docs/guides/types.md) for more details
 

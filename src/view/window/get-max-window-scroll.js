@@ -2,9 +2,10 @@
 import type { Position } from 'css-box-model';
 import getMaxScroll from '../../state/get-max-scroll';
 import getDocumentElement from '../get-document-element';
+import type { DragDropEnvironment } from '../environment';
 
-export default (): Position => {
-  const doc: HTMLElement = getDocumentElement();
+export default (env?: ?DragDropEnvironment): Position => {
+  const doc: HTMLElement = getDocumentElement(env);
 
   const maxScroll: Position = getMaxScroll({
     // unclipped padding box, with scrollbar

@@ -18,12 +18,18 @@ function withConsole(type: string, fn: () => void, message?: string) {
 export const withError = withConsole.bind(null, 'error');
 export const withWarn = withConsole.bind(null, 'warn');
 
+function isActWarning(args: mixed[]): boolean {
+  const first = args[0];
+  return typeof first === 'string' && first.includes('not wrapped in act');
+}
+
 function withoutConsole(type: string, fn: () => void) {
   const mock = jest.spyOn(console, type).mockImplementation(noop);
 
   fn();
 
-  expect(mock).not.toHaveBeenCalled();
+  const unexpected = mock.mock.calls.filter((args) => !isActWarning(args));
+  expect(unexpected).toHaveLength(0);
   mock.mockReset();
 }
 

@@ -1,8 +1,11 @@
 // @flow
-import type { ReactWrapper } from 'enzyme';
 
-// wrapper.update() no longer forces a render
-// instead using wrapper.setProps({});
-// https://github.com/airbnb/enzyme/issues/1245
+// Forces a re-render via setProps({}) (same pattern enzyme used after
+// wrapper.update() stopped forcing renders).
+// Works with RTL mount helpers that expose setProps.
 
-export default (wrapper: ReactWrapper<*>) => wrapper.setProps({});
+type HasSetProps = {|
+  setProps: (next: Object) => void,
+|};
+
+export default (wrapper: HasSetProps) => wrapper.setProps({});

@@ -9,7 +9,6 @@ import {
 } from '../../../../../src';
 import expandedMouse from '../../util/expanded-mouse';
 import { isDragging } from '../../util/helpers';
-import { withError } from '../../../../util/console';
 import { noop } from '../../../../../src/empty';
 
 function getIndex(el: HTMLElement): number {
@@ -71,11 +70,8 @@ it('should adjust captured values for any changes that impact that dragging item
   // initially it had an index of 1
   expect(getIndex(second)).toBe(1);
 
-  // act(() => {}); is joining the two into one update which is
-  // causing unexpected mounting behaviour
-  withError(() => {
-    expandedMouse.rawPowerLift(getByTestId('second'), { x: 0, y: 0 });
-  });
+  // with flushSync in onBeforeCapture, powerLift (act-wrapped) is safe
+  expandedMouse.powerLift(getByTestId('second'), { x: 0, y: 0 });
 
   // act(() => rerender());
   // first item has been removed

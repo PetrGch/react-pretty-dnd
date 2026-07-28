@@ -6,6 +6,7 @@ import type { FocusMarshal, Unregister } from './focus-marshal-types';
 import { dragHandle as dragHandleAttr } from '../data-attributes';
 import useLayoutEffect from '../use-isomorphic-layout-effect';
 import findDragHandle from '../get-elements/find-drag-handle';
+import type { DragDropEnvironment } from '../environment';
 
 type Entry = {|
   id: DraggableId,
@@ -16,11 +17,16 @@ type EntryMap = {
   [id: DraggableId]: Entry,
 };
 
-export default function useFocusMarshal(contextId: ContextId): FocusMarshal {
+export default function useFocusMarshal(
+  contextId: ContextId,
+  environment?: ?DragDropEnvironment,
+): FocusMarshal {
   const entriesRef = useRef<EntryMap>({});
   const recordRef = useRef<?DraggableId>(null);
   const restoreFocusFrameRef = useRef<?AnimationFrameID>(null);
   const isMountedRef = useRef<boolean>(false);
+  const doc: Document = environment ? environment.document : document;
+  const root = environment ? environment.root : document;
 
   const register = useCallback(function register(
     id: DraggableId,
@@ -42,13 +48,17 @@ export default function useFocusMarshal(contextId: ContextId): FocusMarshal {
 
   const tryGiveFocus = useCallback(
     function tryGiveFocus(tryGiveFocusTo: DraggableId) {
-      const handle: ?HTMLElement = findDragHandle(contextId, tryGiveFocusTo);
+      const handle: ?HTMLElement = findDragHandle(
+        contextId,
+        tryGiveFocusTo,
+        root,
+      );
 
-      if (handle && handle !== document.activeElement) {
+      if (handle && handle !== doc.activeElement) {
         handle.focus();
       }
     },
-    [contextId],
+    [contextId, doc, root],
   );
 
   const tryShiftRecord = useCallback(function tryShiftRecord(
@@ -89,7 +99,7 @@ export default function useFocusMarshal(contextId: ContextId): FocusMarshal {
     // clear any existing record
     recordRef.current = null;
 
-    const focused: ?Element = document.activeElement;
+    const focused: ?Element = doc.activeElement;
 
     // no item focused so it cannot be our item
     if (!focused) {
@@ -102,7 +112,7 @@ export default function useFocusMarshal(contextId: ContextId): FocusMarshal {
     }
 
     recordRef.current = id;
-  }, []);
+  }, [doc]);
 
   useLayoutEffect(() => {
     isMountedRef.current = true;

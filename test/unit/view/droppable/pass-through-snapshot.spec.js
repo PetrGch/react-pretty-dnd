@@ -1,6 +1,5 @@
 // @flow
-import type { ReactWrapper } from 'enzyme';
-import mount from './util/mount';
+import mount, { type DroppableWrapper } from './util/mount';
 import getStubber from './util/get-stubber';
 import {
   isNotOverHome,
@@ -28,7 +27,7 @@ it('should let a consumer know when a foreign list is being dragged over', () =>
 it('should update snapshot as dragging over changes', () => {
   const myMock = jest.fn();
 
-  const wrapper: ReactWrapper<*> = mount({
+  const wrapper: DroppableWrapper = mount({
     mapProps: homeAtRest,
     WrappedComponent: getStubber(myMock),
   });

@@ -1,6 +1,6 @@
 // @flow
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react';
+import { render, fireEvent, act } from '@testing-library/react';
 import * as keyCodes from '../../../src/view/key-codes';
 import type {
   DraggableProvided,
@@ -99,8 +99,10 @@ it('should allow the changing of combining in onDragStart', () => {
 
     const handle: HTMLElement = getByTestId('0');
     simpleLift(keyboard, handle);
-    // flush onDragStart  responder
-    jest.runOnlyPendingTimers();
+    // flush onDragStart responder + setState
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
 
     const start: DragStart = {
       draggableId: '0',
@@ -115,7 +117,9 @@ it('should allow the changing of combining in onDragStart', () => {
 
     // now moving down will cause a combine impact!
     fireEvent.keyDown(handle, { keyCode: keyCodes.arrowDown });
-    jest.runOnlyPendingTimers();
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
     const update: DragUpdate = {
       ...start,
       destination: null,

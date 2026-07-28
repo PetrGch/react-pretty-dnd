@@ -1,9 +1,9 @@
 // @flow
 import React, { Component } from 'react';
-import { mount } from 'enzyme';
 import type { Provided } from '../../../../src/view/droppable/droppable-types';
 import Droppable from '../../../../src/view/droppable/connected-droppable';
 import forceUpdate from '../../../util/force-update';
+import mount from '../../../util/rtl-mount';
 import { DragDropContext } from '../../../../src';
 
 class Person extends Component<{ name: string, provided: Provided }> {
@@ -43,7 +43,7 @@ it('should render the child function when the parent renders', () => {
   const wrapper = mount(<App currentUser="Jake" />);
 
   expect(Person.prototype.render).toHaveBeenCalledTimes(1);
-  expect(wrapper.find(Person).props().name).toBe('Jake');
+  expect(wrapper.getByText('hello Jake')).toBeTruthy();
 
   wrapper.unmount();
 });
@@ -54,7 +54,7 @@ it('should render the child function when the parent re-renders', () => {
   forceUpdate(wrapper);
 
   expect(Person.prototype.render).toHaveBeenCalledTimes(2);
-  expect(wrapper.find(Person).props().name).toBe('Jake');
+  expect(wrapper.getByText('hello Jake')).toBeTruthy();
 
   wrapper.unmount();
 });
@@ -67,7 +67,7 @@ it('should render the child function when the parents props changes that cause a
   });
 
   expect(Person.prototype.render).toHaveBeenCalledTimes(2);
-  expect(wrapper.find(Person).props().name).toBe('Finn');
+  expect(wrapper.getByText('hello Finn')).toBeTruthy();
 
   wrapper.unmount();
 });

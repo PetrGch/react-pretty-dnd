@@ -1,9 +1,9 @@
 // @flow
 /* eslint-disable react/no-multi-comp */
-import { mount } from 'enzyme';
 import React from 'react';
 import type { DroppableDescriptor } from '../../../../src/types';
 import forceUpdate from '../../../util/force-update';
+import mount from '../../../util/rtl-mount';
 import { preset, ScrollableItem, WithAppContext } from './util/shared';
 import { setViewport } from '../../../util/viewport';
 import PassThroughProps from '../../../util/pass-through-props';

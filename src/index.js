@@ -18,6 +18,11 @@ export {
 
 export { resetServerContext } from './view/drag-drop-context';
 
+export type {
+  DragDropEnvironment,
+  EnvironmentInput,
+} from './view/environment';
+
 // Public flow types
 
 export type {

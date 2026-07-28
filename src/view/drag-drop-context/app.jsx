@@ -48,6 +48,8 @@ import useStartupValidation from './use-startup-validation';
 import usePrevious from '../use-previous-ref';
 import { warning } from '../../dev-warning';
 import useSensorMarshal from '../use-sensor-marshal/use-sensor-marshal';
+import type { DragDropEnvironment } from '../environment';
+import type { Position } from 'css-box-model';
 
 export type Props = {|
   ...Responders,
@@ -63,8 +65,7 @@ export type Props = {|
 
   // screen reader
   dragHandleUsageInstructions: string,
-  //TODO any type
-  dndContext: any,
+  environment: DragDropEnvironment,
 |};
 
 const createResponders = (props: Props): Responders => ({
@@ -91,6 +92,7 @@ export default function App(props: Props) {
     sensors,
     nonce,
     dragHandleUsageInstructions,
+    environment,
   } = props;
   const lazyStoreRef: LazyStoreRef = useRef<?Store>(null);
 
@@ -103,13 +105,18 @@ export default function App(props: Props) {
     return createResponders(lastPropsRef.current);
   }, [lastPropsRef]);
 
-  const announce: Announce = useAnnouncer(contextId);
+  const announce: Announce = useAnnouncer(contextId, environment);
 
   const dragHandleUsageInstructionsId: ElementId = useHiddenTextElement({
     contextId,
     text: dragHandleUsageInstructions,
+    environment,
   });
-  const styleMarshal: StyleMarshal = useStyleMarshal(contextId, nonce);
+  const styleMarshal: StyleMarshal = useStyleMarshal(
+    contextId,
+    nonce,
+    environment,
+  );
 
   const lazyDispatch: (Action) => void = useCallback((action: Action): void => {
     getStore(lazyStoreRef).dispatch(action);
@@ -134,13 +141,20 @@ export default function App(props: Props) {
   const registry: Registry = useRegistry();
 
   const dimensionMarshal: DimensionMarshal = useMemo<DimensionMarshal>(() => {
-    return createDimensionMarshal(registry, marshalCallbacks);
-  }, [registry, marshalCallbacks]);
+    return createDimensionMarshal(registry, marshalCallbacks, environment);
+  }, [registry, marshalCallbacks, environment]);
+
+  const scrollWindowWithEnv = useCallback(
+    (change: Position): void => {
+      scrollWindow(change, environment.window);
+    },
+    [environment.window],
+  );
 
   const autoScroller: AutoScroller = useMemo<AutoScroller>(
     () =>
       createAutoScroller({
-        scrollWindow,
+        scrollWindow: scrollWindowWithEnv,
         scrollDroppable: dimensionMarshal.scrollDroppable,
         ...bindActionCreators(
           {
@@ -150,10 +164,10 @@ export default function App(props: Props) {
           lazyDispatch,
         ),
       }),
-    [dimensionMarshal.scrollDroppable, lazyDispatch],
+    [dimensionMarshal.scrollDroppable, lazyDispatch, scrollWindowWithEnv],
   );
 
-  const focusMarshal: FocusMarshal = useFocusMarshal(contextId);
+  const focusMarshal: FocusMarshal = useFocusMarshal(contextId, environment);
 
   const store: Store = useMemo<Store>(
     () =>
@@ -164,11 +178,13 @@ export default function App(props: Props) {
         focusMarshal,
         getResponders,
         styleMarshal,
+        environment,
       }),
     [
       announce,
       autoScroller,
       dimensionMarshal,
+      environment,
       focusMarshal,
       getResponders,
       styleMarshal,
@@ -229,16 +245,19 @@ export default function App(props: Props) {
       isMovementAllowed: getIsMovementAllowed,
       dragHandleUsageInstructionsId,
       registry,
-      dndContext: props.dndContext,
+      environment,
+      tryAbort: tryResetStore,
     }),
     [
       contextId,
       dimensionMarshal,
       dragHandleUsageInstructionsId,
+      environment,
       focusMarshal,
       getCanLift,
       getIsMovementAllowed,
       registry,
+      tryResetStore,
     ],
   );
 
@@ -249,7 +268,7 @@ export default function App(props: Props) {
     customSensors: sensors,
     // default to 'true' unless 'false' is explicitly passed
     enableDefaultSensors: props.enableDefaultSensors !== false,
-    dndContext: props.dndContext
+    environment,
   });
 
   // Clean store when unmounting

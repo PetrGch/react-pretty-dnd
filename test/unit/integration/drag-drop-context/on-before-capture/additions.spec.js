@@ -10,7 +10,6 @@ import {
 } from '../../../../../src';
 import expandedMouse from '../../util/expanded-mouse';
 import { isDragging } from '../../util/helpers';
-import { withError } from '../../../../util/console';
 import { noop } from '../../../../../src/empty';
 
 it('should allow for additions to be made', () => {
@@ -58,11 +57,8 @@ it('should allow for additions to be made', () => {
   const { getByTestId } = render(<Root />);
   const handle: HTMLElement = getByTestId('0');
 
-  // act(() => {}); is joining the two into one update which is
-  // causing unexpected mounting behaviour
-  withError(() => {
-    expandedMouse.rawPowerLift(handle, { x: 0, y: 0 });
-  });
+  // with flushSync in onBeforeCapture, powerLift (act-wrapped) is safe
+  expandedMouse.powerLift(handle, { x: 0, y: 0 });
 
   expect(isDragging(handle)).toBe(true);
 });
@@ -128,11 +124,8 @@ it('should adjust captured values for any changes that impact that dragging item
   // first item does not exist yet
   expect(queryByTestId('first')).toBe(null);
 
-  // act(() => {}); is joining the two into one update which is
-  // causing unexpected mounting behaviour
-  withError(() => {
-    expandedMouse.rawPowerLift(initial, { x: 0, y: 0 });
-  });
+  // with flushSync in onBeforeCapture, powerLift (act-wrapped) is safe
+  expandedMouse.powerLift(initial, { x: 0, y: 0 });
 
   // first item has been added
   expect(queryByTestId('first')).toBeTruthy();

@@ -16,11 +16,13 @@ import type {
 import makeDimension from './get-dimension';
 import useLayoutEffect from '../use-isomorphic-layout-effect';
 import useUniqueId from '../use-unique-id';
+import type { DragDropEnvironment } from '../environment';
 
 export type Args = {|
   descriptor: DraggableDescriptor,
   getDraggableRef: () => ?HTMLElement,
   registry: Registry,
+  environment?: ?DragDropEnvironment,
   ...DraggableOptions,
 |};
 
@@ -34,6 +36,7 @@ export default function useDraggablePublisher(args: Args) {
     canDragInteractiveElements,
     shouldRespectForcePress,
     isEnabled,
+    environment,
   } = args;
 
   const options: DraggableOptions = useMemo(
@@ -49,9 +52,10 @@ export default function useDraggablePublisher(args: Args) {
     (windowScroll?: Position): DraggableDimension => {
       const el: ?HTMLElement = getDraggableRef();
       invariant(el, 'Cannot get dimension when no ref is set');
-      return makeDimension(descriptor, el, windowScroll);
+      const win: typeof window = environment ? environment.window : window;
+      return makeDimension(descriptor, el, windowScroll, win);
     },
-    [descriptor, getDraggableRef],
+    [descriptor, environment, getDraggableRef],
   );
 
   const entry: DraggableEntry = useMemo(

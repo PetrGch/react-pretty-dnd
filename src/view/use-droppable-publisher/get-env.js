@@ -1,5 +1,8 @@
 // @flow
-import getClosestScrollable from './get-closest-scrollable';
+import getClosestScrollable, {
+  getParentCrossingShadow,
+} from './get-closest-scrollable';
+import type { DragDropEnvironment } from '../environment';
 
 export type Env = {|
   closestScrollable: ?Element,
@@ -9,20 +12,27 @@ export type Env = {|
 // TODO: do this check at the same time as the closest scrollable
 // in order to avoid double calling getComputedStyle
 // Do this when we move to multiple scroll containers
-const getIsFixed = (el: ?Element): boolean => {
+const getIsFixed = (
+  el: ?Element,
+  win: typeof window,
+): boolean => {
   if (!el) {
     return false;
   }
-  const style: CSSStyleDeclaration = window.getComputedStyle(el);
+  const style: CSSStyleDeclaration = win.getComputedStyle(el);
   if (style.position === 'fixed') {
     return true;
   }
-  return getIsFixed(el.parentElement);
+  return getIsFixed(getParentCrossingShadow(el), win);
 };
 
-export default (start: Element): Env => {
-  const closestScrollable: ?Element = getClosestScrollable(start);
-  const isFixedOnPage: boolean = getIsFixed(start);
+export default (
+  start: Element,
+  environment?: ?DragDropEnvironment,
+): Env => {
+  const win: typeof window = environment ? environment.window : window;
+  const closestScrollable: ?Element = getClosestScrollable(start, environment);
+  const isFixedOnPage: boolean = getIsFixed(start, win);
 
   return {
     closestScrollable,

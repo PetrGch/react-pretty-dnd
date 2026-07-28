@@ -26,6 +26,7 @@ import type {
   DraggableDescriptor,
 } from '../../types';
 import { warning } from '../../dev-warning';
+import type { DragDropEnvironment } from '../../view/environment';
 
 type Collection = {|
   critical: Critical,
@@ -46,9 +47,15 @@ function shouldPublishUpdate(
     return false;
   }
 
-  const home: DroppableEntry = registry.droppable.getById(
+  // During React 19 error-boundary recovery / mid-drag unmount the droppable
+  // may already be gone; treat that as "do not publish".
+  const home: ?DroppableEntry = registry.droppable.findById(
     entry.descriptor.droppableId,
   );
+
+  if (!home) {
+    return false;
+  }
 
   if (home.descriptor.mode !== 'virtual') {
     warning(`
@@ -63,7 +70,11 @@ function shouldPublishUpdate(
   return true;
 }
 
-export default (registry: Registry, callbacks: Callbacks) => {
+export default (
+  registry: Registry,
+  callbacks: Callbacks,
+  environment?: ?DragDropEnvironment,
+) => {
   let collection: ?Collection = null;
 
   const publisher: WhileDraggingPublisher = createPublisher({
@@ -199,6 +210,7 @@ export default (registry: Registry, callbacks: Callbacks) => {
       critical,
       registry,
       scrollOptions: request.scrollOptions,
+      environment,
     });
   };
 

@@ -14,7 +14,8 @@ function getOptions(
 }
 
 export default function bindEvents(
-  el: HTMLElement,
+  // Window, Document, Element, ShadowRoot, etc.
+  el: EventTarget,
   bindings: EventBinding[],
   sharedOptions?: EventOptions,
 ): Function {

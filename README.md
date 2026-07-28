@@ -2,7 +2,7 @@
   <img src="https://user-images.githubusercontent.com/2182637/53611918-54c1ff80-3c24-11e9-9917-66ac3cef513d.png" alt="react beautiful dnd logo" />
 </p>
 <h1 align="center">react-pretty-dnd <small><sup>(rpd)</sup></small></h1>
-<h4 align="center">fork of react-beautiful-dnd <small><sup>(rpd)</sup></small></h1>
+<h4 align="center">fork of react-beautiful-dnd <small><sup>(rbd)</sup></small></h4>
 
 <div align="center">
 
@@ -58,6 +58,213 @@ We have created [a free course on `egghead.io` 🥚](https://egghead.io/courses/
 - Independent nested lists - a list can be a child of another list, but you cannot drag items from the parent list into a child list
 - Server side rendering (SSR) compatible - see [resetServerContext()](/docs/api/reset-server-context.md)
 - Plays well with [nested interactive elements](/docs/api/draggable.md#interactive-child-elements-within-a-draggable-) by default
+- **Shadow DOM / encapsulated window** support via the [`environment` prop](#shadow-dom--environment) on `<DragDropContext />`
+- React **18** and **19** peer support
+
+## Shadow DOM & `environment`
+
+When drag-and-drop lives in a normal light DOM tree, you do not need anything special:
+
+```jsx
+import { DragDropContext, Droppable, Draggable } from 'react-pretty-dnd';
+
+<DragDropContext onDragEnd={onDragEnd}>
+  <Droppable droppableId="list">
+    {(provided) => (
+      <div ref={provided.innerRef} {...provided.droppableProps}>
+        {/* <Draggable /> items */}
+        {provided.placeholder}
+      </div>
+    )}
+  </Droppable>
+</DragDropContext>
+```
+
+By default the library uses the global `window` and `document` for:
+
+- pointer / keyboard / touch event listeners
+- window scroll and viewport size
+- `getComputedStyle` for dimensions
+- `document.querySelectorAll` to find drag handles
+- injecting style tags and screen-reader nodes into `document.head` / `document.body`
+
+That breaks (or calculates wrong positions) when your list is mounted **inside a Shadow DOM** or behind a **proxy / encapsulated window** (some micro-frontend and web-component hosts). Use the `environment` prop on `<DragDropContext />` to tell the library which window and which query root to use.
+
+### `environment` prop
+
+```js
+type EnvironmentInput = {|
+  // Required: host window used for scroll, events, getComputedStyle
+  window: typeof window,
+  // Optional: where querySelectorAll looks for drag handles / draggables
+  // Defaults to environment.window.document
+  root?: Document | ShadowRoot | Element,
+|};
+```
+
+| Field | Used for |
+| --- | --- |
+| `window` | `addEventListener`, `pageXOffset` / `pageYOffset`, `scrollBy`, `getComputedStyle`, viewport width/height |
+| `root` | `querySelectorAll` for drag handles and draggable nodes (must see into your Shadow DOM) |
+| `window.document` (derived) | Creating / appending style tags, announcer nodes, default clone portal container |
+
+Pass `environment` **only** on `<DragDropContext />`. You do **not** pass it on each `<Droppable />` or `<Draggable />`.
+
+### Open Shadow DOM example
+
+Mount React into an open shadow root and pass that root as `environment.root`:
+
+```jsx
+import React, { useEffect, useRef, useState } from 'react';
+import { createRoot } from 'react-dom/client';
+import {
+  DragDropContext,
+  Droppable,
+  Draggable,
+} from 'react-pretty-dnd';
+
+function List({ shadowRoot }) {
+  const [items, setItems] = useState([
+    { id: '1', content: 'Item 1' },
+    { id: '2', content: 'Item 2' },
+    { id: '3', content: 'Item 3' },
+  ]);
+
+  function onDragEnd(result) {
+    if (!result.destination) {
+      return;
+    }
+    const next = Array.from(items);
+    const [removed] = next.splice(result.source.index, 1);
+    next.splice(result.destination.index, 0, removed);
+    setItems(next);
+  }
+
+  return (
+    <DragDropContext
+      environment={{
+        window, // browsing-context window (or a host-provided proxy window)
+        root: shadowRoot, // so querySelectorAll can see shadow nodes
+      }}
+      onDragEnd={onDragEnd}
+    >
+      <Droppable droppableId="shadow-list">
+        {(provided) => (
+          <div ref={provided.innerRef} {...provided.droppableProps}>
+            {items.map((item, index) => (
+              <Draggable key={item.id} draggableId={item.id} index={index}>
+                {(dragProvided) => (
+                  <div
+                    ref={dragProvided.innerRef}
+                    {...dragProvided.draggableProps}
+                    {...dragProvided.dragHandleProps}
+                  >
+                    {item.content}
+                  </div>
+                )}
+              </Draggable>
+            ))}
+            {provided.placeholder}
+          </div>
+        )}
+      </Droppable>
+    </DragDropContext>
+  );
+}
+
+function ShadowHost() {
+  const hostRef = useRef(null);
+
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host) {
+      return;
+    }
+
+    const shadowRoot = host.shadowRoot || host.attachShadow({ mode: 'open' });
+    let mountPoint = shadowRoot.querySelector('[data-rpd-mount]');
+    if (!mountPoint) {
+      mountPoint = document.createElement('div');
+      mountPoint.setAttribute('data-rpd-mount', 'true');
+      shadowRoot.appendChild(mountPoint);
+    }
+
+    const root = createRoot(mountPoint);
+    root.render(<List shadowRoot={shadowRoot} />);
+
+    return () => root.unmount();
+  }, []);
+
+  return <div ref={hostRef} />;
+}
+```
+
+### Encapsulated / proxy `window`
+
+Some hosts expose a non-global `window` (custom scroll offsets, isolated event targets). Pass that object as `environment.window`:
+
+```jsx
+<DragDropContext
+  environment={{
+    window: hostWindow, // must expose pageXOffset/pageYOffset, addEventListener,
+    // getComputedStyle, scrollBy, and document
+    root: shadowRoot, // optional; defaults to hostWindow.document
+  }}
+  onDragEnd={onDragEnd}
+>
+  {/* ... */}
+</DragDropContext>
+```
+
+Minimum surface the library expects on `environment.window`:
+
+- `pageXOffset` / `pageYOffset`
+- `scrollBy(x, y)`
+- `getComputedStyle(element)`
+- `addEventListener` / `removeEventListener`
+- `document` (with `documentElement`, `body`, `head`, `createElement`, `querySelector`)
+
+### Closed Shadow DOM
+
+`document.querySelectorAll` cannot see into a **closed** shadow root from outside. You must pass the `ShadowRoot` reference your component already holds:
+
+```jsx
+environment={{ window, root: closedShadowRoot }}
+```
+
+If you only have the host element and not the closed root, discovery will fail.
+
+### Scroll containers across shadow boundaries
+
+Scroll parents are discovered by walking `parentElement`, then crossing into the light DOM via `shadowRoot.host` when needed. A scrollable ancestor **outside** the shadow tree is still found correctly. Prefer real `overflow: auto | scroll` containers rather than product-specific selectors.
+
+### Clones / portals inside Shadow DOM
+
+By default, dragging clones portal to `document.body` (light DOM). Inside Shadow DOM you usually want the clone to stay in the same tree:
+
+```jsx
+<Droppable
+  droppableId="list"
+  renderClone={(provided, snapshot, rubric) => (/* ... */)}
+  getContainerForClone={() => shadowRoot} // or a node inside the shadow root
+>
+  {/* ... */}
+</Droppable>
+```
+
+### Legacy `dndContext` prop
+
+`dndContext` is **deprecated** but still accepted for compatibility:
+
+- Window-like value → treated as `{ window: dndContext, root: dndContext.document }`
+- Query-root-like value (ShadowRoot / Document / Element) → treated as `{ window: globalThis.window, root: dndContext }` (scroll/events still use the global window — prefer `environment` for full support)
+
+If both `environment` and `dndContext` are passed, `environment` wins.
+
+### More detail
+
+Full prop reference: [`<DragDropContext />` API](/docs/api/drag-drop-context.md).  
+Storybook example: `stories/60-environment.stories.js` (“shadow DOM environment”).
 
 ## Motivation 🤔
 
@@ -95,10 +302,11 @@ There are a lot of libraries out there that allow for drag and drop interactions
 
 ![diagram](https://user-images.githubusercontent.com/2182637/53607406-c8f3a780-3c12-11e9-979c-7f3b5bd1bfbd.gif)
 
-- [`<DragDropContext />`](/docs/api/drag-drop-context.md) - _Wraps the part of your application you want to have drag and drop enabled for_
+- [`<DragDropContext />`](/docs/api/drag-drop-context.md) - _Wraps the part of your application you want to have drag and drop enabled for_ (includes [`environment` / Shadow DOM](#shadow-dom--environment))
 - [`<Droppable />`](/docs/api/droppable.md) - _An area that can be dropped into. Contains `<Draggable />`s_
 - [`<Draggable />`](/docs/api/draggable.md) - _What can be dragged around_
 - [`resetServerContext()`](/docs/api/reset-server-context.md) - _Utility for server side rendering (SSR)_
+- [Shadow DOM & `environment`](#shadow-dom--environment) - _Using drag and drop inside Shadow DOM or with a proxy window_
 
 ### Guides 🗺
 

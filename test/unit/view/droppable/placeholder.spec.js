@@ -1,6 +1,5 @@
 // @flow
-import type { ReactWrapper } from 'enzyme';
-import mount from './util/mount';
+import mount, { type DroppableWrapper } from './util/mount';
 import {
   foreignOwnProps,
   isOverForeign,
@@ -10,71 +9,74 @@ import {
   homeAtRest,
   isNotOverForeign,
 } from './util/get-props';
-import Placeholder from '../../../../src/view/placeholder';
+import * as attributes from '../../../../src/view/data-attributes';
+
+const getPlaceholder = (wrapper: DroppableWrapper): ?HTMLElement =>
+  wrapper.container.querySelector(`[${attributes.placeholder.contextId}]`);
 
 describe('home list', () => {
   it('should not render a placeholder when not dragging', () => {
-    const wrapper: ReactWrapper<*> = mount({
+    const wrapper: DroppableWrapper = mount({
       ownProps: homeOwnProps,
       mapProps: homeAtRest,
     });
 
-    expect(wrapper.find(Placeholder)).toHaveLength(0);
+    expect(getPlaceholder(wrapper)).toBeNull();
   });
 
   it('should render a placeholder when dragging over', () => {
-    const wrapper: ReactWrapper<*> = mount({
+    const wrapper: DroppableWrapper = mount({
       ownProps: homeOwnProps,
       mapProps: isOverHome,
     });
 
-    expect(wrapper.find(Placeholder)).toHaveLength(1);
+    expect(getPlaceholder(wrapper)).toBeTruthy();
   });
 
   it('should render a placeholder when dragging over nothing', () => {
-    const wrapper: ReactWrapper<*> = mount({
+    const wrapper: DroppableWrapper = mount({
       ownProps: homeOwnProps,
       mapProps: isNotOverHome,
     });
 
-    expect(wrapper.find(Placeholder)).toHaveLength(1);
+    expect(getPlaceholder(wrapper)).toBeTruthy();
   });
 
   it('should render a placeholder when dragging over a foreign list', () => {
-    const wrapper: ReactWrapper<*> = mount({
+    const wrapper: DroppableWrapper = mount({
       ownProps: homeOwnProps,
       mapProps: isOverForeign,
     });
 
-    expect(wrapper.find(Placeholder)).toHaveLength(1);
+    expect(getPlaceholder(wrapper)).toBeTruthy();
   });
 });
 
 describe('foreign', () => {
   it('should not render a placeholder when not dragging', () => {
-    const wrapper: ReactWrapper<*> = mount({
+    const wrapper: DroppableWrapper = mount({
       ownProps: foreignOwnProps,
       mapProps: homeAtRest,
     });
 
-    expect(wrapper.find(Placeholder)).toHaveLength(0);
+    expect(getPlaceholder(wrapper)).toBeNull();
   });
 
   it('should render a placeholder when dragging over', () => {
-    const wrapper: ReactWrapper<*> = mount({
+    const wrapper: DroppableWrapper = mount({
       ownProps: foreignOwnProps,
       mapProps: isOverForeign,
     });
 
-    expect(wrapper.find(Placeholder)).toHaveLength(1);
+    expect(getPlaceholder(wrapper)).toBeTruthy();
   });
 
   it('should not render a placeholder when over nothing', () => {
-    const wrapper: ReactWrapper<*> = mount({
+    const wrapper: DroppableWrapper = mount({
       ownProps: foreignOwnProps,
       mapProps: isNotOverForeign,
     });
 
-    expect(wrapper.find(Placeholder)).toHaveLength(0);
+    expect(getPlaceholder(wrapper)).toBeNull();
   });
 });

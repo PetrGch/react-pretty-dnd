@@ -4,6 +4,7 @@ import { useMemo } from 'use-memo-one';
 import type { ContextId, ElementId } from '../../types';
 import getBodyElement from '../get-body-element';
 import useUniqueId from '../use-unique-id';
+import type { DragDropEnvironment } from '../environment';
 
 type GetIdArgs = {|
   contextId: ContextId,
@@ -17,11 +18,13 @@ export function getElementId({ contextId, uniqueId }: GetIdArgs): ElementId {
 type Args = {|
   contextId: ContextId,
   text: string,
+  environment?: DragDropEnvironment,
 |};
 
 export default function useHiddenTextElement({
   contextId,
   text,
+  environment,
 }: Args): ElementId {
   const uniqueId: string = useUniqueId('hidden-text', { separator: '-' });
   const id: ElementId = useMemo(() => getElementId({ contextId, uniqueId }), [
@@ -31,7 +34,8 @@ export default function useHiddenTextElement({
 
   useEffect(
     function mount() {
-      const el: HTMLElement = document.createElement('div');
+      const doc: Document = environment ? environment.document : document;
+      const el: HTMLElement = doc.createElement('div');
 
       // identifier
       el.id = id;
@@ -43,17 +47,17 @@ export default function useHiddenTextElement({
       el.style.display = 'none';
 
       // Add to body
-      getBodyElement().appendChild(el);
+      getBodyElement(environment).appendChild(el);
 
       return function unmount() {
         // checking if element exists as the body might have been changed by things like 'turbolinks'
-        const body: HTMLBodyElement = getBodyElement();
+        const body: HTMLBodyElement = getBodyElement(environment);
         if (body.contains(el)) {
           body.removeChild(el);
         }
       };
     },
-    [id, text],
+    [environment, id, text],
   );
 
   return id;

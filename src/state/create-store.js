@@ -19,6 +19,7 @@ import type { StyleMarshal } from '../view/use-style-marshal/style-marshal-types
 import type { AutoScroller } from './auto-scroller/auto-scroller-types';
 import type { Responders, Announce } from '../types';
 import type { Store } from './store-types';
+import type { DragDropEnvironment } from '../view/environment';
 
 // We are checking if window is available before using it.
 // This is needed for universal apps that render the component server side.
@@ -39,6 +40,7 @@ type Args = {|
   getResponders: () => Responders,
   announce: Announce,
   autoScroller: AutoScroller,
+  environment?: ?DragDropEnvironment,
 |};
 
 export default ({
@@ -48,6 +50,7 @@ export default ({
   getResponders,
   announce,
   autoScroller,
+  environment,
 }: Args): Store =>
   createStore(
     reducer,
@@ -85,10 +88,10 @@ export default ({
         drop,
         // When a drop animation finishes - fire a drop complete
         dropAnimationFinish,
-        dropAnimationFlushOnScroll,
+        dropAnimationFlushOnScroll(environment),
         pendingDrop,
         autoScroll(autoScroller),
-        scrollListener,
+        scrollListener(environment),
         focus(focusMarshal),
         // Fire responders for consumers (after update to store)
         responders(getResponders, announce),

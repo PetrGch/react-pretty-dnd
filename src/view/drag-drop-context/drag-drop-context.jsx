@@ -1,5 +1,6 @@
 // @flow
 import React, { type Node } from 'react';
+import { useMemo } from 'use-memo-one';
 import type { Responders, ContextId, Sensor } from '../../types';
 import ErrorBoundary from './error-boundary';
 import preset from '../../screen-reader-message-preset';
@@ -8,6 +9,12 @@ import useUniqueContextId, {
   reset as resetContextId,
 } from './use-unique-context-id';
 import { reset as resetUniqueIds } from '../use-unique-id';
+import {
+  normalizeEnvironment,
+  type EnvironmentInput,
+  type LegacyDndContext,
+  type DragDropEnvironment,
+} from '../environment';
 
 type Props = {|
   ...Responders,
@@ -21,8 +28,10 @@ type Props = {|
   // See our [sensor api](/docs/sensors/sensor-api.md)
   sensors?: Sensor[],
   enableDefaultSensors?: ?boolean,
-  //TODO any type
-  dndContext?: any,
+  // Preferred: pass host window + optional ShadowRoot/query root
+  environment?: EnvironmentInput,
+  // Legacy: Window OR query root. Prefer "environment".
+  dndContext?: LegacyDndContext,
 |};
 
 // Reset any context that gets persisted across server side renders
@@ -36,10 +45,21 @@ export default function DragDropContext(props: Props) {
   const dragHandleUsageInstructions: string =
     props.dragHandleUsageInstructions || preset.dragHandleUsageInstructions;
 
+  // Stabilize environment so App does not recreate the Redux store on
+  // every parent re-render (e.g. onBeforeCapture setState + flushSync).
+  const environment: DragDropEnvironment = useMemo(
+    () =>
+      normalizeEnvironment({
+        environment: props.environment,
+        dndContext: props.dndContext,
+      }),
+    [props.environment, props.dndContext],
+  );
+
   // We need the error boundary to be on the outside of App
   // so that it can catch any errors caused by App
   return (
-    <ErrorBoundary>
+    <ErrorBoundary window={environment.window}>
       {(setCallbacks) => (
         <App
           nonce={props.nonce}
@@ -53,7 +73,7 @@ export default function DragDropContext(props: Props) {
           onDragStart={props.onDragStart}
           onDragUpdate={props.onDragUpdate}
           onDragEnd={props.onDragEnd}
-          dndContext={props.dndContext}
+          environment={environment}
         >
           {props.children}
         </App>

@@ -1,5 +1,4 @@
 // @flow
-import type { ReactWrapper } from 'enzyme';
 import { type Position } from 'css-box-model';
 
 const primaryButton: number = 0;
@@ -97,7 +96,8 @@ export const dispatchWindowTouchEvent = (
 
 export const mouseEvent = (
   eventName: string,
-  wrapper: ReactWrapper<*>,
+  // Legacy enzyme-style helper; callers should prefer fireEvent / dispatch*.
+  wrapper: any,
   client?: Position = origin,
   button?: number = primaryButton,
   options?: Object = {},
@@ -111,7 +111,7 @@ export const mouseEvent = (
 };
 
 export const withKeyboard = (keyCode: number): Function => (
-  wrapper: ReactWrapper<*>,
+  wrapper: any,
   options?: Object = {},
 ): void => {
   wrapper.simulate('keydown', { keyCode, ...options });
@@ -119,7 +119,7 @@ export const withKeyboard = (keyCode: number): Function => (
 
 export const touchEvent = (
   eventName: string,
-  wrapper: ReactWrapper<*>,
+  wrapper: any,
   client?: Position = { x: 0, y: 0 },
   force?: number = 0,
   options?: Object = {},

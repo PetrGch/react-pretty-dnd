@@ -81,16 +81,22 @@ export default function createPublisher({
             a.descriptor.index - b.descriptor.index,
         );
 
-      const updated: DroppablePublish[] = Object.keys(modified).map(
-        (id: DroppableId) => {
-          const entry: DroppableEntry = registry.droppable.getById(id);
+      const updated: DroppablePublish[] = Object.keys(modified).reduce(
+        (acc: DroppablePublish[], id: DroppableId): DroppablePublish[] => {
+          // Droppable may have unregistered before this RAF (React 19 cleanup)
+          const entry: ?DroppableEntry = registry.droppable.findById(id);
+          if (!entry) {
+            return acc;
+          }
 
           const scroll: Position = entry.callbacks.getScrollWhileDragging();
-          return {
+          acc.push({
             droppableId: id,
             scroll,
-          };
+          });
+          return acc;
         },
+        [],
       );
 
       const result: Published = {

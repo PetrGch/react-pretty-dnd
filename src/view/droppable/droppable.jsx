@@ -13,6 +13,7 @@ import DroppableContext, {
 } from '../context/droppable-context';
 // import useAnimateInOut from '../use-animate-in-out/use-animate-in-out';
 import getMaxWindowScroll from '../window/get-max-window-scroll';
+import getBodyElement from '../get-body-element';
 import useValidation from './use-validation';
 import type {
   StateSnapshot as DraggableStateSnapshot,
@@ -26,7 +27,7 @@ import { PrivateDraggable } from '../draggable/draggable-api';
 export default function Droppable(props: Props) {
   const appContext: ?AppContextValue = useContext<?AppContextValue>(AppContext);
   invariant(appContext, 'Could not find app context');
-  const { contextId, isMovementAllowed } = appContext;
+  const { contextId, isMovementAllowed, environment } = appContext;
   const droppableRef = useRef<?HTMLElement>(null);
   const placeholderRef = useRef<?HTMLElement>(null);
 
@@ -74,9 +75,9 @@ export default function Droppable(props: Props) {
   const onPlaceholderTransitionEnd = useCallback(() => {
     // A placeholder change can impact the window's max scroll
     if (isMovementAllowed()) {
-      updateViewportMaxScroll({ maxScroll: getMaxWindowScroll() });
+      updateViewportMaxScroll({ maxScroll: getMaxWindowScroll(environment) });
     }
-  }, [isMovementAllowed, updateViewportMaxScroll]);
+  }, [environment, isMovementAllowed, updateViewportMaxScroll]);
 
   useDroppablePublisher({
     droppableId,
@@ -155,7 +156,10 @@ export default function Droppable(props: Props) {
       </PrivateDraggable>
     );
 
-    return ReactDOM.createPortal(node, getContainerForClone());
+    return ReactDOM.createPortal(
+      node,
+      getContainerForClone() || getBodyElement(environment),
+    );
   }
 
   return (

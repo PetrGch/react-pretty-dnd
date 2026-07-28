@@ -5,17 +5,19 @@ import { origin } from '../../state/position';
 import getWindowScroll from './get-window-scroll';
 import getMaxWindowScroll from './get-max-window-scroll';
 import getDocumentElement from '../get-document-element';
+import type { DragDropEnvironment } from '../environment';
 
-export default (): Viewport => {
-  const scroll: Position = getWindowScroll();
-  const maxScroll: Position = getMaxWindowScroll();
+export default (env?: ?DragDropEnvironment): Viewport => {
+  const win: typeof window = env ? env.window : window;
+  const scroll: Position = getWindowScroll(win);
+  const maxScroll: Position = getMaxWindowScroll(env);
 
   const top: number = scroll.y;
   const left: number = scroll.x;
 
   // window.innerHeight: includes scrollbars (not what we want)
   // document.clientHeight gives us the correct value when using the html5 doctype
-  const doc: HTMLElement = getDocumentElement();
+  const doc: HTMLElement = getDocumentElement(env);
   // Using these values as they do not consider scrollbars
   // padding box, without scrollbar
   const width: number = doc.clientWidth;

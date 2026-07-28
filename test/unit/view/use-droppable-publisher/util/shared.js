@@ -18,6 +18,7 @@ import AppContext, {
 } from '../../../../../src/view/context/app-context';
 import { noop } from '../../../../../src/empty';
 import { getMarshalStub } from '../../../../util/dimension-marshal';
+import { createEnvironment } from '../../../../../src/view/environment';
 
 export const scheduled: ScrollOptions = {
   shouldPublishImmediately: false,
@@ -97,6 +98,8 @@ export function WithAppContext(props: WithAppContextProps) {
       dragHandleUsageInstructionsId: '1',
       marshal: props.marshal || getMarshalStub(),
       registry: props.registry,
+      environment: createEnvironment(),
+      tryAbort: () => {},
     }),
     [props.marshal, props.registry],
   );

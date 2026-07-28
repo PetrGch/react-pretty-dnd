@@ -1,7 +1,7 @@
 // @flow
 import React from 'react';
 import type { Position } from 'css-box-model';
-import { render } from '@testing-library/react';
+import { render, act } from '@testing-library/react';
 import { invariant } from '../../../../../src/invariant';
 import type {
   SensorAPI,
@@ -28,7 +28,11 @@ it('should throttle move events by request animation frame', () => {
   invariant(preDrag);
 
   const initial: Position = { x: 2, y: 3 };
-  const actions: FluidDragActions = preDrag.fluidLift(initial);
+  // $FlowFixMe - assigned in act
+  let actions: FluidDragActions;
+  act(() => {
+    actions = preDrag.fluidLift(initial);
+  });
   // has not moved yet
   expect(getOffset(handle)).toEqual({ x: 0, y: 0 });
 
@@ -41,7 +45,9 @@ it('should throttle move events by request animation frame', () => {
   expect(getOffset(handle)).toEqual({ x: 0, y: 0 });
 
   // moved after frame
-  requestAnimationFrame.step();
+  act(() => {
+    requestAnimationFrame.step();
+  });
   expect(getOffset(handle)).toEqual(offset);
 });
 
@@ -58,7 +64,11 @@ it('should cancel any pending moves after a lock is released', () => {
   invariant(preDrag);
 
   const initial: Position = { x: 2, y: 3 };
-  const actions: FluidDragActions = preDrag.fluidLift(initial);
+  // $FlowFixMe - assigned in act
+  let actions: FluidDragActions;
+  act(() => {
+    actions = preDrag.fluidLift(initial);
+  });
   // has not moved yet
   expect(getOffset(handle)).toEqual({ x: 0, y: 0 });
 
@@ -67,9 +77,13 @@ it('should cancel any pending moves after a lock is released', () => {
   // not moved yet
   expect(getOffset(handle)).toEqual({ x: 0, y: 0 });
 
-  actions.cancel();
+  act(() => {
+    actions.cancel();
+  });
 
   // will not do anything
-  requestAnimationFrame.step();
+  act(() => {
+    requestAnimationFrame.step();
+  });
   expect(getOffset(handle)).toEqual({ x: 0, y: 0 });
 });

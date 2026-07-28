@@ -81,14 +81,21 @@ it('should not allow a sensor to obtain a on a dropping item, but can claim one 
   // drag not started yet
   expect(isDragging(handle)).toBe(false);
   // start a drag
-  const actions: FluidDragActions = preDrag.fluidLift({ x: 0, y: 0 });
+  let actions: FluidDragActions;
+  act(() => {
+    actions = preDrag.fluidLift({ x: 0, y: 0 });
+  });
   expect(isDragging(handle)).toBe(true);
 
   // release the movement
   actions.move({ x: 100, y: 100 });
-  requestAnimationFrame.flush();
+  act(() => {
+    requestAnimationFrame.flush();
+  });
 
-  actions.drop();
+  act(() => {
+    actions.drop();
+  });
   expect(isDropAnimating(handle)).toBe(true);
 
   // lock is no longer active

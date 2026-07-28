@@ -1,6 +1,5 @@
 // @flow
 import React from 'react';
-import type { ReactWrapper } from 'enzyme';
 import type { Provided } from '../../../../src/view/droppable/droppable-types';
 import {
   homeAtRest,
@@ -8,7 +7,7 @@ import {
   isOverForeign,
   isNotOverForeign,
 } from './util/get-props';
-import mount from './util/mount';
+import mount, { type DroppableWrapper } from './util/mount';
 
 class WithNoPlaceholder extends React.Component<{|
   provided: Provided,
@@ -35,7 +34,7 @@ afterEach(() => {
 
 describe('is over foreign', () => {
   it('should log a warning when mounting', () => {
-    const wrapper: ReactWrapper<*> = mount({
+    const wrapper: DroppableWrapper = mount({
       ownProps: foreignOwnProps,
       mapProps: isOverForeign,
       WrappedComponent: WithNoPlaceholder,
@@ -47,7 +46,7 @@ describe('is over foreign', () => {
   });
 
   it('should log a warning when updating', () => {
-    const wrapper: ReactWrapper<*> = mount({
+    const wrapper: DroppableWrapper = mount({
       ownProps: foreignOwnProps,
       mapProps: homeAtRest,
       WrappedComponent: WithNoPlaceholder,
@@ -63,7 +62,7 @@ describe('is over foreign', () => {
 
 describe('is not over foreign', () => {
   it('should not log a warning when mounting', () => {
-    const wrapper: ReactWrapper<*> = mount({
+    const wrapper: DroppableWrapper = mount({
       ownProps: foreignOwnProps,
       mapProps: isNotOverForeign,
       WrappedComponent: WithNoPlaceholder,
@@ -75,7 +74,7 @@ describe('is not over foreign', () => {
   });
 
   it('should not log a warning when updating', () => {
-    const wrapper: ReactWrapper<*> = mount({
+    const wrapper: DroppableWrapper = mount({
       ownProps: foreignOwnProps,
       mapProps: homeAtRest,
       WrappedComponent: WithNoPlaceholder,

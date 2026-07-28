@@ -1,5 +1,7 @@
 // @flow
-import getClosestScrollable from './get-closest-scrollable';
+import getClosestScrollable, {
+  getParentCrossingShadow,
+} from './get-closest-scrollable';
 import { warning } from '../../dev-warning';
 
 // We currently do not support nested scroll containers
@@ -10,7 +12,7 @@ export default (scrollable: ?Element) => {
   }
 
   const anotherScrollParent: ?Element = getClosestScrollable(
-    scrollable.parentElement,
+    getParentCrossingShadow(scrollable),
   );
 
   if (!anotherScrollParent) {

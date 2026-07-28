@@ -1,57 +1,58 @@
 // @flow
-import { act } from 'react-dom/test-utils';
-import type { ReactWrapper } from 'enzyme';
-import mount from './util/mount';
+import { act } from '@testing-library/react';
+import { invariant } from '../../../../src/invariant';
+import mount, { type DroppableWrapper } from './util/mount';
 import {
   homeOwnProps,
   isNotOverHome,
   homeAtRest,
   homePostDropAnimation,
 } from './util/get-props';
-import Placeholder from '../../../../src/view/placeholder';
+import * as attributes from '../../../../src/view/data-attributes';
+import fireTransitionEnd from '../../../util/fire-transition-end';
+
+const getPlaceholder = (wrapper: DroppableWrapper): ?HTMLElement =>
+  wrapper.container.querySelector(`[${attributes.placeholder.contextId}]`);
 
 it('should not display a placeholder after a flushed drag end in the home list', () => {
   // dropping
-  const wrapper: ReactWrapper<*> = mount({
+  const wrapper: DroppableWrapper = mount({
     ownProps: homeOwnProps,
     mapProps: isNotOverHome,
   });
 
-  expect(wrapper.find(Placeholder)).toHaveLength(1);
+  expect(getPlaceholder(wrapper)).toBeTruthy();
 
   wrapper.setProps({
     ...homeAtRest,
   });
-  wrapper.update();
 
-  expect(wrapper.find(Placeholder)).toHaveLength(0);
+  expect(getPlaceholder(wrapper)).toBeNull();
 });
 
 it('should animate a placeholder closed in a home list after a drag', () => {
   // dropping
-  const wrapper: ReactWrapper<*> = mount({
+  const wrapper: DroppableWrapper = mount({
     ownProps: homeOwnProps,
     mapProps: isNotOverHome,
   });
 
-  expect(wrapper.find(Placeholder)).toHaveLength(1);
+  expect(getPlaceholder(wrapper)).toBeTruthy();
 
   wrapper.setProps({
     ...homePostDropAnimation,
   });
-  wrapper.update();
 
-  expect(wrapper.find(Placeholder)).toHaveLength(1);
+  expect(getPlaceholder(wrapper)).toBeTruthy();
   expect(homePostDropAnimation.shouldAnimatePlaceholder).toBe(true);
 
   // finishing the animation
   act(() => {
-    wrapper.find(Placeholder).props().onClose();
+    const el: ?HTMLElement = getPlaceholder(wrapper);
+    invariant(el);
+    fireTransitionEnd(el, 'height');
   });
 
-  // let the wrapper know the react tree has changed
-  wrapper.update();
-
   // placeholder is now gone
-  expect(wrapper.find(Placeholder)).toHaveLength(0);
+  expect(getPlaceholder(wrapper)).toBeNull();
 });

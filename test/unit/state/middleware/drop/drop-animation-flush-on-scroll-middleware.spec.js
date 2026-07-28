@@ -26,7 +26,7 @@ function getToDropAnimation(mock: JestMockFn<*, *>): Store {
     passThrough(mock),
     // will convert the drop into a drop animate
     dropMiddleware,
-    middleware,
+    middleware(),
   );
 
   store.dispatch(initialPublish(initialPublishArgs));

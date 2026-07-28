@@ -33,12 +33,22 @@ const snapshotArgs =
 
 const commonjsArgs = {
   include: 'node_modules/**',
-  // needed for react-is via react-redux
+  // needed for react-is / use-sync-external-store via react-redux
   // https://stackoverflow.com/questions/50080893/rollup-error-isvalidelementtype-is-not-exported-by-node-modules-react-is-inde/50098540
   namedExports: {
     'node_modules/react-is/index.js': [
       'isValidElementType',
       'isContextConsumer',
+    ],
+    'node_modules/react-redux/node_modules/react-is/index.js': [
+      'isValidElementType',
+      'isContextConsumer',
+    ],
+    'node_modules/use-sync-external-store/shim/with-selector.js': [
+      'useSyncExternalStoreWithSelector',
+    ],
+    'node_modules/use-sync-external-store/shim/index.js': [
+      'useSyncExternalStore',
     ],
   },
 };
@@ -122,7 +132,6 @@ export default [
       json(),
       resolve({ extensions }),
       babel(getBabelOptions({ useESModules: true })),
-      sizeSnapshot(snapshotArgs),
     ],
   },
 ];

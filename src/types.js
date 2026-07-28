@@ -1,5 +1,6 @@
 // @flow
 import type { BoxModel, Rect, Position } from 'css-box-model';
+import type { DragDropEnvironment } from './view/environment';
 
 export type Id = string;
 export type DraggableId = Id;
@@ -480,8 +481,7 @@ export type SensorAPI = {|
   tryReleaseLock: () => void,
   findClosestDraggableId: (event: Event) => ?DraggableId,
   findOptionsForDraggable: (id: DraggableId) => ?DraggableOptions,
-  //TODO any type
-  dndContext: any,
+  environment: DragDropEnvironment,
 |};
 
 export type Sensor = (api: SensorAPI) => void;

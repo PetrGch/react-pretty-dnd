@@ -13,6 +13,7 @@ import type {
   MiddlewareStore,
   Dispatch,
 } from '../../store-types';
+import { flushSync } from 'react-dom';
 
 export default (
   getResponders: () => Responders,
@@ -27,10 +28,14 @@ export default (
     action: Action,
   ): any => {
     if (action.type === 'BEFORE_INITIAL_CAPTURE') {
-      publisher.beforeCapture(
-        action.payload.draggableId,
-        action.payload.movementMode,
-      );
+      // React 18+ batches setState; onBeforeCapture must flush DOM mutations
+      // (add/remove Draggables) before dimensions are collected.
+      flushSync(() => {
+        publisher.beforeCapture(
+          action.payload.draggableId,
+          action.payload.movementMode,
+        );
+      });
       return;
     }
 

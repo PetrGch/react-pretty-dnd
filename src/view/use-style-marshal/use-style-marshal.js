@@ -8,23 +8,13 @@ import type { ContextId, DropReason } from '../../types';
 import getStyles, { type Styles } from './get-styles';
 import { prefix } from '../data-attributes';
 import useLayoutEffect from '../use-isomorphic-layout-effect';
+import type { DragDropEnvironment } from '../environment';
 
-const getHead = (): HTMLHeadElement => {
-  const head: ?HTMLHeadElement = document.querySelector('head');
-  invariant(head, 'Cannot find the head to append a style to');
-  return head;
-};
-
-const createStyleEl = (nonce?: string): HTMLStyleElement => {
-  const el: HTMLStyleElement = document.createElement('style');
-  if (nonce) {
-    el.setAttribute('nonce', nonce);
-  }
-  el.type = 'text/css';
-  return el;
-};
-
-export default function useStyleMarshal(contextId: ContextId, nonce?: string) {
+export default function useStyleMarshal(
+  contextId: ContextId,
+  nonce?: string,
+  environment?: DragDropEnvironment,
+) {
   const styles: Styles = useMemo(() => getStyles(contextId), [contextId]);
   const alwaysRef = useRef<?HTMLStyleElement>(null);
   const dynamicRef = useRef<?HTMLStyleElement>(null);
@@ -51,6 +41,23 @@ export default function useStyleMarshal(contextId: ContextId, nonce?: string) {
       !alwaysRef.current && !dynamicRef.current,
       'style elements already mounted',
     );
+
+    const doc: Document = environment ? environment.document : document;
+
+    const getHead = (): HTMLHeadElement => {
+      const head: ?HTMLHeadElement = doc.querySelector('head');
+      invariant(head, 'Cannot find the head to append a style to');
+      return head;
+    };
+
+    const createStyleEl = (styleNonce?: string): HTMLStyleElement => {
+      const el: HTMLStyleElement = doc.createElement('style');
+      if (styleNonce) {
+        el.setAttribute('nonce', styleNonce);
+      }
+      el.type = 'text/css';
+      return el;
+    };
 
     const always: HTMLStyleElement = createStyleEl(nonce);
     const dynamic: HTMLStyleElement = createStyleEl(nonce);
@@ -89,6 +96,7 @@ export default function useStyleMarshal(contextId: ContextId, nonce?: string) {
     styles.always,
     styles.resting,
     contextId,
+    environment,
   ]);
 
   const dragging = useCallback(() => setDynamicStyle(styles.dragging), [

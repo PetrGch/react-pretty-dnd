@@ -1,6 +1,13 @@
 /* eslint-disable global-require */
 /* eslint-disable flowtype/require-valid-file-annotation */
 
+// React 19 / modern react-dom expect queueMicrotask (not in older jsdom)
+if (typeof queueMicrotask === 'undefined') {
+  global.queueMicrotask = function queueMicrotask(cb) {
+    Promise.resolve().then(cb);
+  };
+}
+
 // Replacing requestAnimationFrame
 // Adding window check because some tests do not
 // run with browser globals enabled
@@ -35,9 +42,3 @@ if (typeof document !== 'undefined' && typeof window !== 'undefined') {
   document.documentElement.clientWidth = window.innerWidth;
   document.documentElement.clientHeight = window.innerHeight;
 }
-// setting up global enzyme
-const Enzyme = require('enzyme');
-
-const Adapter = require('enzyme-adapter-react-16');
-
-Enzyme.configure({ adapter: new Adapter() });

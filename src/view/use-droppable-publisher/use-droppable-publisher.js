@@ -58,7 +58,7 @@ export default function useDroppablePublisher(args: Props) {
   const whileDraggingRef = useRef<?WhileDragging>(null);
   const appContext: AppContextValue = useRequiredContext(AppContext);
   const uniqueId: Id = useUniqueId('droppable');
-  const { registry, marshal } = appContext;
+  const { registry, marshal, environment, tryAbort } = appContext;
   const previousRef = usePreviousRef(args);
 
   const descriptor = useMemo<DroppableDescriptor>(
@@ -128,7 +128,7 @@ export default function useDroppablePublisher(args: Props) {
       const previous: Props = previousRef.current;
       const ref: ?HTMLElement = previous.getDroppableRef();
       invariant(ref, 'Cannot collect without a droppable ref');
-      const env: Env = getEnv(ref);
+      const env: Env = getEnv(ref, environment);
 
       const dragging: WhileDragging = {
         ref,
@@ -172,7 +172,7 @@ export default function useDroppablePublisher(args: Props) {
 
       return dimension;
     },
-    [appContext.contextId, descriptor, onClosestScroll, previousRef],
+    [appContext.contextId, descriptor, environment, onClosestScroll, previousRef],
   );
 
   const getScrollWhileDragging = useCallback((): Position => {
@@ -188,7 +188,10 @@ export default function useDroppablePublisher(args: Props) {
 
   const dragStopped = useCallback(() => {
     const dragging: ?WhileDragging = whileDraggingRef.current;
-    invariant(dragging, 'Cannot stop drag when no active drag');
+    // Can be called defensively after an abort already cleared the drag
+    if (!dragging) {
+      return;
+    }
     const closest: ?Element = getClosestScrollableFromDrag(dragging);
 
     // goodbye old friend
@@ -246,6 +249,14 @@ export default function useDroppablePublisher(args: Props) {
     registry.droppable.register(entry);
 
     return () => {
+      // React 19+ runs child layout cleanups before parent passive cleanups.
+      // Abort the drag first so the store flush does not look up unregistered droppables.
+      if (whileDraggingRef.current) {
+        tryAbort();
+      }
+
+      // If a drag is still active after abort (e.g. mid-drag descriptor change),
+      // tear down local scroll watching and warn.
       if (whileDraggingRef.current) {
         warning(
           'Unsupported: changing the droppableId or type of a Droppable during a drag',
@@ -255,7 +266,15 @@ export default function useDroppablePublisher(args: Props) {
 
       registry.droppable.unregister(entry);
     };
-  }, [callbacks, descriptor, dragStopped, entry, marshal, registry.droppable]);
+  }, [
+    callbacks,
+    descriptor,
+    dragStopped,
+    entry,
+    marshal,
+    registry.droppable,
+    tryAbort,
+  ]);
 
   // update is enabled with the marshal
   // only need to update when there is a drag

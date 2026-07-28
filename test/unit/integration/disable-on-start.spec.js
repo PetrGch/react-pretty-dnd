@@ -1,7 +1,7 @@
 // @flow
 import React from 'react';
 import { getRect } from 'css-box-model';
-import { render } from '@testing-library/react';
+import { render, act } from '@testing-library/react';
 import type {
   DraggableProvided,
   DroppableProvided,
@@ -103,8 +103,10 @@ it('should allow the disabling of a droppable in onDragStart', () => {
   const handle: HTMLElement = getByTestId('drag-handle');
 
   simpleLift(keyboard, handle);
-  // flush responder
-  jest.runOnlyPendingTimers();
+  // flush responder + setState from onDragStart
+  act(() => {
+    jest.runOnlyPendingTimers();
+  });
 
   const start: DragStart = {
     draggableId: 'draggable',
@@ -120,7 +122,9 @@ it('should allow the disabling of a droppable in onDragStart', () => {
   // onDragUpdate will occur after setTimeout
   expect(responders.onDragUpdate).not.toHaveBeenCalled();
 
-  jest.runOnlyPendingTimers();
+  act(() => {
+    jest.runOnlyPendingTimers();
+  });
   // an update should be fired as the home location has changed
   const update: DragUpdate = {
     ...start,

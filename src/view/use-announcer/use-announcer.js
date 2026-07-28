@@ -5,17 +5,22 @@ import type { Announce, ContextId } from '../../types';
 import { warning } from '../../dev-warning';
 import getBodyElement from '../get-body-element';
 import visuallyHidden from '../visually-hidden-style';
+import type { DragDropEnvironment } from '../environment';
 
 export const getId = (contextId: ContextId): string =>
   `rbd-announcement-${contextId}`;
 
-export default function useAnnouncer(contextId: ContextId): Announce {
+export default function useAnnouncer(
+  contextId: ContextId,
+  environment?: DragDropEnvironment,
+): Announce {
   const id: string = useMemo(() => getId(contextId), [contextId]);
   const ref = useRef<?HTMLElement>(null);
 
   useEffect(
     function setup() {
-      const el: HTMLElement = document.createElement('div');
+      const doc: Document = environment ? environment.document : document;
+      const el: HTMLElement = doc.createElement('div');
       // storing reference for usage in announce
       ref.current = el;
 
@@ -33,7 +38,7 @@ export default function useAnnouncer(contextId: ContextId): Announce {
       Object.assign(el.style, visuallyHidden);
 
       // Add to body
-      getBodyElement().appendChild(el);
+      getBodyElement(environment).appendChild(el);
 
       return function cleanup() {
         // Not clearing the ref as it might be used by announce before the timeout expires
@@ -42,7 +47,7 @@ export default function useAnnouncer(contextId: ContextId): Announce {
         // during a mount be published
         setTimeout(function remove() {
           // checking if element exists as the body might have been changed by things like 'turbolinks'
-          const body: HTMLBodyElement = getBodyElement();
+          const body: HTMLBodyElement = getBodyElement(environment);
           if (body.contains(el)) {
             body.removeChild(el);
           }
@@ -54,7 +59,7 @@ export default function useAnnouncer(contextId: ContextId): Announce {
         });
       };
     },
-    [id],
+    [environment, id],
   );
 
   const announce: Announce = useCallback((message: string): void => {

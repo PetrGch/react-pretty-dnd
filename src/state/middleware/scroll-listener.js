@@ -3,6 +3,7 @@ import type { Position } from 'css-box-model';
 import { moveByWindowScroll } from '../action-creators';
 import type { MiddlewareStore, Action, Dispatch } from '../store-types';
 import getScrollListener from '../../view/scroll-listener';
+import type { DragDropEnvironment } from '../../view/environment';
 
 // TODO: this is taken from auto-scroll. Let's make it a util
 const shouldEnd = (action: Action): boolean =>
@@ -10,8 +11,11 @@ const shouldEnd = (action: Action): boolean =>
   action.type === 'DROP_ANIMATE' ||
   action.type === 'FLUSH';
 
-export default (store: MiddlewareStore) => {
+export default (environment?: ?DragDropEnvironment) => (
+  store: MiddlewareStore,
+) => {
   const listener = getScrollListener({
+    environment,
     onWindowScroll: (newScroll: Position) => {
       store.dispatch(moveByWindowScroll({ newScroll }));
     },

@@ -4,6 +4,7 @@ import type { DraggableId, ContextId, ElementId } from '../../types';
 import type { DimensionMarshal } from '../../state/dimension-marshal/dimension-marshal-types';
 import type { FocusMarshal } from '../use-focus-marshal/focus-marshal-types';
 import type { Registry } from '../../state/registry/registry-types';
+import type { DragDropEnvironment } from '../environment';
 
 export type AppContextValue = {|
   focus: FocusMarshal,
@@ -13,6 +14,8 @@ export type AppContextValue = {|
   dragHandleUsageInstructionsId: ElementId,
   marshal: DimensionMarshal,
   registry: Registry,
+  environment: DragDropEnvironment,
+  tryAbort: () => void,
 |};
 
 export default React.createContext<?AppContextValue>(null);

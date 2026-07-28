@@ -308,12 +308,12 @@ export default function useMouseSensor(api: SensorAPI) {
       };
 
       unbindEventsRef.current = bindEvents(
-        api.dndContext || window,
+        api.environment.window,
         [preventForcePressBinding, startCaptureBinding],
         options,
       );
     },
-    [preventForcePressBinding, startCaptureBinding],
+    [api.environment.window, preventForcePressBinding, startCaptureBinding],
   );
 
   const stop = useCallback(() => {
@@ -351,9 +351,13 @@ export default function useMouseSensor(api: SensorAPI) {
         },
       });
 
-      unbindEventsRef.current = bindEvents(api.dndContext || window, bindings, options);
+      unbindEventsRef.current = bindEvents(
+        api.environment.window,
+        bindings,
+        options,
+      );
     },
-    [cancel, stop],
+    [api.environment.window, cancel, stop],
   );
 
   const startPendingDrag = useCallback(

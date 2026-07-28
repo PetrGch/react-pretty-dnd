@@ -1,6 +1,6 @@
 {
   "name": "react-pretty-dnd",
-  "version": "13.1.2",
+  "version": "14.0.0",
   "description": "fork of react-beautiful-dnd lib",
   "keywords": [
     "drag and drop",
@@ -11,6 +11,7 @@
     "url": "https://github.com/PetrGch/react-beautiful-dnd.git"
   },
   "main": "dist/react-pretty-dnd.cjs.js",
+  "module": "dist/react-pretty-dnd.esm.js",
   "sideEffects": false,
   "files": [
     "/dist",
@@ -47,7 +48,7 @@
     "css-box-model": "^1.2.0",
     "memoize-one": "^5.1.1",
     "raf-schd": "^4.0.2",
-    "react-redux": "^7.2.0",
+    "react-redux": "8.1.3",
     "redux": "^4.0.4",
     "use-memo-one": "^1.1.1"
   },
@@ -68,7 +69,8 @@
     "@storybook/addon-storysource": "5.3.21",
     "@storybook/react": "5.3.21",
     "@storybook/theming": "5.3.21",
-    "@testing-library/react": "10.4.9",
+    "@testing-library/dom": "^10.0.0",
+    "@testing-library/react": "16.1.0",
     "babel-core": "7.0.0-bridge.0",
     "babel-eslint": "10.1.0",
     "babel-jest": "25.5.1",
@@ -78,8 +80,6 @@
     "cross-env": "7.0.3",
     "cypress": "4.4.0",
     "emotion-theming": "10.0.27",
-    "enzyme": "3.11.0",
-    "enzyme-adapter-react-16": "1.15.2",
     "eslint": "6.8.0",
     "eslint-config-airbnb": "18.1.0",
     "eslint-config-prettier": "6.15.0",
@@ -104,9 +104,9 @@
     "markdown-it": "10.0.0",
     "prettier": "2.0.4",
     "raf-stub": "3.0.0",
-    "react": "16.13.1",
-    "react-dom": "16.13.1",
-    "react-test-renderer": "16.13.1",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "react-test-renderer": "19.0.0",
     "react-virtualized": "9.21.2",
     "react-window": "1.8.6",
     "require-from-string": "2.0.2",
@@ -132,8 +132,11 @@
     "webpack": "4.42.1"
   },
   "peerDependencies": {
-    "react": "^16.8.5 || ^17.0.0",
-    "react-dom": "^16.8.5 || ^17.0.0"
+    "react": "^18.2.0 || ^19.0.0",
+    "react-dom": "^18.2.0 || ^19.0.0"
+  },
+  "engines": {
+    "node": ">=18"
   },
   "license": "Apache-2.0",
   "jest-junit": {

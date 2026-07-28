@@ -1,7 +1,6 @@
 // @flow
 import React, { useRef, useCallback } from 'react';
 import { type Spacing, type Rect } from 'css-box-model';
-import { mount, type ReactWrapper } from 'enzyme';
 import { useMemo } from 'use-memo-one';
 import { invariant } from '../../../src/invariant';
 import useDraggablePublisher from '../../../src/view/use-draggable-publisher';
@@ -11,6 +10,7 @@ import {
   getComputedSpacing,
 } from '../../util/dimension';
 import forceUpdate from '../../util/force-update';
+import mount, { type Wrapper } from '../../util/rtl-mount';
 import tryCleanPrototypeStubs from '../../util/try-clean-prototype-stubs';
 import type {
   DraggableId,
@@ -197,7 +197,7 @@ describe('dimension registration', () => {
 describe('dimension publishing', () => {
   // we are doing this rather than spying on the prototype.
   // Sometimes setRef was being provided with an element that did not have the mocked prototype :|
-  const setBoundingClientRect = (wrapper: ReactWrapper<*>, borderBox: Rect) => {
+  const setBoundingClientRect = (wrapper: Wrapper, borderBox: Rect) => {
     const ref: ?HTMLElement = wrapper.getDOMNode();
     invariant(ref);
 
@@ -226,7 +226,7 @@ describe('dimension publishing', () => {
     const registry: Registry = createRegistry();
     const registerSpy = jest.spyOn(registry.draggable, 'register');
 
-    const wrapper: ReactWrapper<*> = mount(
+    const wrapper: Wrapper = mount(
       <Item
         registry={registry}
         draggableId={expected.descriptor.id}
@@ -273,7 +273,7 @@ describe('dimension publishing', () => {
     const registry: Registry = createRegistry();
     const registerSpy = jest.spyOn(registry.draggable, 'register');
 
-    const wrapper: ReactWrapper<*> = mount(
+    const wrapper: Wrapper = mount(
       <Item
         registry={registry}
         draggableId={expected.descriptor.id}
@@ -314,7 +314,7 @@ describe('dimension publishing', () => {
     const registry: Registry = createRegistry();
     const registerSpy = jest.spyOn(registry.draggable, 'register');
 
-    const wrapper: ReactWrapper<*> = mount(
+    const wrapper: Wrapper = mount(
       <Item
         draggableId={expected.descriptor.id}
         index={expected.descriptor.index}
@@ -364,7 +364,7 @@ describe('dimension publishing', () => {
     }
     const registry: Registry = createRegistry();
     const registerSpy = jest.spyOn(registry.draggable, 'register');
-    const wrapper: ReactWrapper<*> = mount(
+    const wrapper: Wrapper = mount(
       <NoRefItem registry={registry} draggableId="draggable" />,
     );
     // pull the get dimension function out

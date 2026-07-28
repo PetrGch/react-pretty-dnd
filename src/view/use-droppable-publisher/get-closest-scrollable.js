@@ -2,6 +2,7 @@
 import { invariant } from '../../invariant';
 import { warning } from '../../dev-warning';
 import getBodyElement from '../get-body-element';
+import type { DragDropEnvironment } from '../environment';
 
 type Overflow = {|
   overflowX: string,
@@ -17,8 +18,33 @@ const isEither = (overflow: Overflow, fn: (value: string) => boolean) =>
 const isBoth = (overflow: Overflow, fn: (value: string) => boolean) =>
   fn(overflow.overflowX) && fn(overflow.overflowY);
 
-const isElementScrollable = (el: Element): boolean => {
-  const style: CSSStyleDeclaration = window.getComputedStyle(el);
+// Walk parent chain, crossing open Shadow DOM boundaries via host
+export function getParentCrossingShadow(el: Element): ?Element {
+  if (el.parentElement) {
+    return el.parentElement;
+  }
+
+  // At a shadow root edge: continue from the host element
+  // nodeType 11 === DOCUMENT_FRAGMENT_NODE (ShadowRoot)
+  const root: Node | Document = el.getRootNode ? el.getRootNode() : el;
+  if (
+    root &&
+    root.nodeType === 11 &&
+    // $FlowFixMe - ShadowRoot.host
+    typeof (root: any).host === 'object' &&
+    (root: any).host
+  ) {
+    return (root: any).host;
+  }
+
+  return null;
+}
+
+const isElementScrollable = (
+  el: Element,
+  win: typeof window,
+): boolean => {
+  const style: CSSStyleDeclaration = win.getComputedStyle(el);
   const overflow: Overflow = {
     overflowX: style.overflowX,
     overflowY: style.overflowY,
@@ -29,22 +55,26 @@ const isElementScrollable = (el: Element): boolean => {
 
 // Special case for a body element
 // Playground: https://codepen.io/alexreardon/pen/ZmyLgX?editors=1111
-const isBodyScrollable = (): boolean => {
+const isBodyScrollable = (
+  env?: ?DragDropEnvironment,
+  win: typeof window,
+): boolean => {
   // Because we always return false for now, we can skip any actual processing in production
   if (process.env.NODE_ENV === 'production') {
     return false;
   }
 
-  const body: HTMLBodyElement = getBodyElement();
-  const html: ?HTMLElement = document.documentElement;
+  const body: HTMLBodyElement = getBodyElement(env);
+  const doc: Document = env ? env.document : document;
+  const html: ?HTMLElement = doc.documentElement;
   invariant(html);
 
   // 1. The `body` has `overflow-[x|y]: auto | scroll`
-  if (!isElementScrollable(body)) {
+  if (!isElementScrollable(body, win)) {
     return false;
   }
 
-  const htmlStyle: CSSStyleDeclaration = window.getComputedStyle(html);
+  const htmlStyle: CSSStyleDeclaration = win.getComputedStyle(html);
   const htmlOverflow: Overflow = {
     overflowX: htmlStyle.overflowX,
     overflowY: htmlStyle.overflowY,
@@ -67,25 +97,31 @@ const isBodyScrollable = (): boolean => {
   return false;
 };
 
-const getClosestScrollable = (el: ?Element): ?Element => {
+const getClosestScrollable = (
+  el: ?Element,
+  env?: ?DragDropEnvironment,
+): ?Element => {
+  const win: typeof window = env ? env.window : window;
+  const doc: Document = env ? env.document : document;
+
   // cannot do anything else!
   if (el == null) {
     return null;
   }
 
   // not allowing us to go higher then body
-  if (el === document.body) {
-    return isBodyScrollable() ? el : null;
+  if (el === doc.body) {
+    return isBodyScrollable(env, win) ? el : null;
   }
 
   // Should never get here, but just being safe
-  if (el === document.documentElement) {
+  if (el === doc.documentElement) {
     return null;
   }
 
-  if (!isElementScrollable(el)) {
-    // keep recursing
-    return getClosestScrollable(el.parentElement);
+  if (!isElementScrollable(el, win)) {
+    // keep recursing — including across shadow boundaries
+    return getClosestScrollable(getParentCrossingShadow(el), env);
   }
 
   // success!

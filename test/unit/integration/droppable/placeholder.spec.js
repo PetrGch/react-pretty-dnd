@@ -315,7 +315,7 @@ describe('foreign list', () => {
       const second: HTMLElement = getByTestId(preset.inHome2.descriptor.id);
 
       // lifting item 2 while item 1 is dropping
-      expandedMouse.rawPowerLift(
+      expandedMouse.powerLift(
         second,
         preset.inHome2.client.borderBox.center,
       );

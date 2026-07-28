@@ -1,6 +1,5 @@
 // @flow
 import type { Position } from 'css-box-model';
-import { mount } from 'enzyme';
 import React from 'react';
 import { invariant } from '../../../../src/invariant';
 import type { DimensionMarshal } from '../../../../src/state/dimension-marshal/dimension-marshal-types';
@@ -9,6 +8,7 @@ import { getDroppableDimension } from '../../../util/dimension';
 import { getMarshalStub } from '../../../util/dimension-marshal';
 import tryCleanPrototypeStubs from '../../../util/try-clean-prototype-stubs';
 import { setViewport } from '../../../util/viewport';
+import mount from '../../../util/rtl-mount';
 import {
   App,
   bigClient,
@@ -70,7 +70,7 @@ it('should recollect scroll if requested', () => {
       <App droppableIsScrollable />
     </WithAppContext>,
   );
-  const el: ?HTMLElement = wrapper.find('.droppable').getDOMNode();
+  const el: ?HTMLElement = wrapper.container.querySelector('.droppable');
   invariant(el);
   // returning smaller border box as this is what occurs when the element is scrollable
   jest

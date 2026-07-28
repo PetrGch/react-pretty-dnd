@@ -8,6 +8,12 @@ import type { AppCallbacks } from './drag-drop-context-types';
 
 type Props = {|
   children: (setCallbacks: (callbacks: AppCallbacks) => void) => Node,
+  window?: typeof window,
+|};
+
+type State = {|
+  // Flipped on rbd invariant so React 19 recovers via getDerivedStateFromError
+  hasRbdError: boolean,
 |};
 
 // Lame that this is not in flow
@@ -15,12 +21,18 @@ type ErrorEvent = Event & {
   error: ?Error,
 };
 
-export default class ErrorBoundary extends React.Component<Props> {
+export default class ErrorBoundary extends React.Component<Props, State> {
+  // Last mounted boundary — used to abort drag from getDerivedStateFromError
+  // (React 19 may recover without calling componentDidCatch in some paths)
+  static latest: ?ErrorBoundary = null;
+
   callbacks: ?AppCallbacks = null;
   unbind: () => void = noop;
+  state: State = { hasRbdError: false };
 
   componentDidMount() {
-    this.unbind = bindEvents(window, [
+    const win: typeof window = this.props.window || window;
+    this.unbind = bindEvents(win, [
       {
         eventName: 'error',
         fn: this.onWindowError,
@@ -28,13 +40,34 @@ export default class ErrorBoundary extends React.Component<Props> {
     ]);
   }
 
-  componentDidCatch(err: Error) {
+  // React 19 requires getDerivedStateFromError for error recovery
+  static getDerivedStateFromError(err: mixed): ?State {
     if (err instanceof RbdInvariant) {
+      const boundary: ?ErrorBoundary = ErrorBoundary.latest;
+      if (boundary && boundary.callbacks && boundary.callbacks.isDragging()) {
+        boundary.callbacks.tryAbort();
+      }
+
       if (process.env.NODE_ENV !== 'production') {
+        // $FlowFixMe - message exists on RbdInvariant
         error(err.message);
       }
 
-      this.setState({});
+      return { hasRbdError: true };
+    }
+    // Re-throw so parent boundaries / React can handle non-rbd errors
+    // eslint-disable-next-line no-restricted-syntax
+    throw err;
+  }
+
+  componentDidCatch(err: mixed) {
+    if (err instanceof RbdInvariant) {
+      // Abort again defensively (no-op if already aborted in GDSFE)
+      if (this.callbacks && this.callbacks.isDragging()) {
+        this.callbacks.tryAbort();
+      }
+      // Allow future errors to be handled again
+      this.setState({ hasRbdError: false });
       return;
     }
 
@@ -45,6 +78,9 @@ export default class ErrorBoundary extends React.Component<Props> {
 
   componentWillUnmount() {
     this.unbind();
+    if (ErrorBoundary.latest === this) {
+      ErrorBoundary.latest = null;
+    }
   }
 
   onWindowError = (event: ErrorEvent) => {
@@ -83,6 +119,7 @@ export default class ErrorBoundary extends React.Component<Props> {
   };
 
   render() {
+    ErrorBoundary.latest = this;
     return this.props.children(this.setCallbacks);
   }
 }

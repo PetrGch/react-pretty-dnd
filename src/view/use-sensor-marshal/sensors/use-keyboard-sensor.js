@@ -202,7 +202,7 @@ export default function useKeyboardSensor(api: SensorAPI) {
 
         // bind dragging listeners
         unbindEventsRef.current = bindEvents(
-          window,
+          api.environment.window,
           getDraggingBindings(actions, stop),
           { capture: true, passive: false },
         );
@@ -221,12 +221,12 @@ export default function useKeyboardSensor(api: SensorAPI) {
       };
 
       unbindEventsRef.current = bindEvents(
-        window,
+        api.environment.window,
         [startCaptureBinding],
         options,
       );
     },
-    [startCaptureBinding],
+    [api.environment.window, startCaptureBinding],
   );
 
   useLayoutEffect(

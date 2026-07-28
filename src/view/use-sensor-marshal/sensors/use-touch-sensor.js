@@ -313,12 +313,12 @@ export default function useTouchSensor(api: SensorAPI) {
       };
 
       unbindEventsRef.current = bindEvents(
-        window,
+        api.environment.window,
         [startCaptureBinding],
         options,
       );
     },
-    [startCaptureBinding],
+    [api.environment.window, startCaptureBinding],
   );
 
   const stop = useCallback(() => {
@@ -366,15 +366,23 @@ export default function useTouchSensor(api: SensorAPI) {
       // Old behaviour:
       // https://gist.github.com/parris/dda613e3ae78f14eb2dc9fa0f4bfce3d
       // https://stackoverflow.com/questions/33298828/touch-move-event-dont-fire-after-touch-start-target-is-removed
-      const unbindTarget = bindEvents(window, getHandleBindings(args), options);
-      const unbindWindow = bindEvents(window, getWindowBindings(args), options);
+      const unbindTarget = bindEvents(
+        api.environment.window,
+        getHandleBindings(args),
+        options,
+      );
+      const unbindWindow = bindEvents(
+        api.environment.window,
+        getWindowBindings(args),
+        options,
+      );
 
       unbindEventsRef.current = function unbindAll() {
         unbindTarget();
         unbindWindow();
       };
     },
-    [cancel, getPhase, stop],
+    [api.environment.window, cancel, getPhase, stop],
   );
 
   const startDragging = useCallback(
@@ -444,18 +452,21 @@ export default function useTouchSensor(api: SensorAPI) {
   // This forces event.preventDefault() in dynamically added
   // touchmove event handlers to actually work
   // https://github.com/atlassian/react-beautiful-dnd/issues/1374
-  useLayoutEffect(function webkitHack() {
-    const unbind = bindEvents(window, [
-      {
-        eventName: 'touchmove',
-        // using a new noop function for each usage as a single `removeEventListener()`
-        // call will remove all handlers with the same reference
-        // https://codesandbox.io/s/removing-multiple-handlers-with-same-reference-fxe15
-        fn: () => {},
-        options: { capture: false, passive: false },
-      },
-    ]);
+  useLayoutEffect(
+    function webkitHack() {
+      const unbind = bindEvents(api.environment.window, [
+        {
+          eventName: 'touchmove',
+          // using a new noop function for each usage as a single `removeEventListener()`
+          // call will remove all handlers with the same reference
+          // https://codesandbox.io/s/removing-multiple-handlers-with-same-reference-fxe15
+          fn: () => {},
+          options: { capture: false, passive: false },
+        },
+      ]);
 
-    return unbind;
-  }, []);
+      return unbind;
+    },
+    [api.environment.window],
+  );
 }

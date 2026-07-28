@@ -4,10 +4,14 @@ import type { State } from '../../../types';
 import type { MiddlewareStore, Action, Dispatch } from '../../store-types';
 import type { EventBinding } from '../../../view/event-bindings/event-types';
 import bindEvents from '../../../view/event-bindings/bind-events';
+import type { DragDropEnvironment } from '../../../view/environment';
 
-export default (store: MiddlewareStore) => {
+export default (environment?: ?DragDropEnvironment) => (
+  store: MiddlewareStore,
+) => {
   let unbind: ?() => void = null;
   let frameId: ?AnimationFrameID = null;
+  const win: typeof window = environment ? environment.window : window;
 
   function clear() {
     if (frameId) {
@@ -17,8 +21,8 @@ export default (store: MiddlewareStore) => {
 
     if (unbind) {
       unbind();
-      unbind = null;
     }
+    unbind = null;
   }
 
   return (next: Dispatch) => (action: Action): any => {
@@ -57,7 +61,7 @@ export default (store: MiddlewareStore) => {
     // It leads to funny drop positions :(
     frameId = requestAnimationFrame(() => {
       frameId = null;
-      unbind = bindEvents(window, [binding]);
+      unbind = bindEvents(win, [binding]);
     });
   };
 };

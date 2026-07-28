@@ -34,6 +34,7 @@ export default function Draggable(props: Props) {
     contextId,
     dragHandleUsageInstructionsId,
     registry,
+    environment,
   } = useRequiredContext(AppContext);
   const { type, droppableId } = useRequiredContext(DroppableContext);
 
@@ -65,7 +66,7 @@ export default function Draggable(props: Props) {
   } = props;
 
   // Validating props and innerRef
-  useValidation(props, contextId, getRef, props.dndContext);
+  useValidation(props, contextId, getRef, environment.root);
 
   // Clones do not speak to the dimension marshal
   // We are violating the rules of hooks here: conditional hooks.
@@ -84,6 +85,7 @@ export default function Draggable(props: Props) {
         canDragInteractiveElements,
         shouldRespectForcePress,
         isEnabled,
+        environment,
       }),
       [
         descriptor,
@@ -92,6 +94,7 @@ export default function Draggable(props: Props) {
         canDragInteractiveElements,
         shouldRespectForcePress,
         isEnabled,
+        environment,
       ],
     );
     useDraggablePublisher(forPublisher);

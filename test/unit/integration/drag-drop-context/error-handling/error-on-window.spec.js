@@ -1,6 +1,6 @@
 // @flow
 import React from 'react';
-import { render } from '@testing-library/react';
+import { render, act } from '@testing-library/react';
 import { RbdInvariant } from '../../../../../src/invariant';
 import App from '../../util/app';
 import { simpleLift, keyboard } from '../../util/controls';
@@ -24,7 +24,9 @@ it('should abort any active drag (rbd error)', () => {
 
   withWarn(() => {
     withError(() => {
-      window.dispatchEvent(event);
+      act(() => {
+        window.dispatchEvent(event);
+      });
     });
   });
 
@@ -44,7 +46,9 @@ it('should abort any active drag (non-rbd error)', () => {
   withoutError(() => {
     // logging that the drag was aborted
     withWarn(() => {
-      window.dispatchEvent(event);
+      act(() => {
+        window.dispatchEvent(event);
+      });
     });
   });
 

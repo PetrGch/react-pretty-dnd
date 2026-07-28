@@ -8,13 +8,13 @@ import checkIsValidInnerRef from '../check-is-valid-inner-ref';
 import findDragHandle from '../get-elements/find-drag-handle';
 import useDevSetupWarning from '../use-dev-setup-warning';
 import useDev from '../use-dev';
+import type { QueryRoot } from '../environment';
 
 export function useValidation(
   props: Props,
   contextId: ContextId,
   getRef: () => ?HTMLElement,
-  //TODO any type
-  dndContext?: any,
+  root?: QueryRoot,
 ) {
   // running after every update in development
   useDevSetupWarning(() => {
@@ -48,7 +48,7 @@ export function useValidation(
     // When not enabled there is no drag handle props
     if (props.isEnabled) {
       invariant(
-        findDragHandle(contextId, id, dndContext),
+        findDragHandle(contextId, id, root),
         `${prefix(id)} Unable to find drag handle`,
       );
     }
